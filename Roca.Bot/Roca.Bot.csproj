@@ -1,8 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
+	<UserSecretsId Condition=" '$(Configuration)'=='Debug' ">Roca</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00930" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0-nightly-00930" />
+    <PackageReference Include="DSharpPlus.Interactivity" Version="4.1.0-nightly-00930" />
+    <PackageReference Include="DSharpPlus.Lavalink" Version="4.1.0-nightly-00930" />
+    <PackageReference Include="DSharpPlus.Rest" Version="4.1.0-nightly-00930" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.1.0-nightly-00930" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0" />
+  </ItemGroup>
 
 </Project>
