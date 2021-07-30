@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00930" />
+    <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00931" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0-nightly-00930" />
     <PackageReference Include="DSharpPlus.Interactivity" Version="4.1.0-nightly-00930" />
     <PackageReference Include="DSharpPlus.Lavalink" Version="4.1.0-nightly-00930" />
@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\RocaMongo\Roca.Mongo\Roca.Mongo.csproj" />
+    <ProjectReference Include="..\..\RocaCore\Roca.Core\Roca.Core.csproj" />
   </ItemGroup>
 
 </Project>

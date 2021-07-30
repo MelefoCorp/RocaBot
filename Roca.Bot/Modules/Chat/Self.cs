@@ -1,6 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using Roca.Mongo;
+using Roca.Core;
 using System.Threading.Tasks;
 
 namespace Roca.Bot.Modules.Chat
@@ -11,7 +11,7 @@ namespace Roca.Bot.Modules.Chat
         public async Task Ping(CommandContext ctx)
         {
             var account = await ctx.User.GetAccount(false).ConfigureAwait(false);
-            await ctx.RespondAsync("Pong!").ConfigureAwait(false);
+            await ctx.RespondAsync(GetType().GetLocalizer()["ping"]).ConfigureAwait(false);
             await account.Save().ConfigureAwait(false);
         }
     }
