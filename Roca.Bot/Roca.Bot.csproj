@@ -16,4 +16,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\RocaMongo\Roca.Mongo\Roca.Mongo.csproj" />
+  </ItemGroup>
+
 </Project>
