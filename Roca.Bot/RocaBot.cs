@@ -1,7 +1,7 @@
 ﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Roca.Bot.Slash;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,8 +10,8 @@ namespace Roca.Bot
     public class RocaBot
     {
         private DiscordShardedClient _client;
-        private CommandsNextConfiguration _cmdConfig;
-        private IReadOnlyDictionary<int, CommandsNextExtension>? _cmds;
+        private SlashCommandsConfiguration _cmdConfig;
+        private IReadOnlyDictionary<int, SlashCommandsExtension>? _cmds;
 
         public RocaBot(IConfiguration configuration)
         {
@@ -23,6 +23,7 @@ namespace Roca.Bot
                 UseRelativeRatelimit = true,
                 MessageCacheSize = 4096,
                 AutoReconnect = true,
+                Intents = DiscordIntents.All,
 #if DEBUG
                 MinimumLogLevel = LogLevel.Debug
 #else
@@ -30,14 +31,14 @@ namespace Roca.Bot
 #endif
             });
 
-            _cmdConfig = new CommandsNextConfiguration
+            _cmdConfig = new SlashCommandsConfiguration
             {
-                CaseSensitive = false,
+                /*CaseSensitive = false,
                 EnableDefaultHelp = false,
                 EnableDms = false,
                 EnableMentionPrefix = false,
                 IgnoreExtraArguments = true,
-                StringPrefixes = new string[] { configuration["RocaBot:DefaultPrefix"] },
+                StringPrefixes = new string[] { configuration["RocaBot:DefaultPrefix"] },*/
             };
 
             _cmds = null;
@@ -45,10 +46,10 @@ namespace Roca.Bot
 
         public async Task Start()
         {
-            _cmds = await _client.UseCommandsNextAsync(_cmdConfig).ConfigureAwait(false);
+            _cmds = await _client.UseSlashCommandsAsync(_cmdConfig).ConfigureAwait(false);
 
-            foreach (var cmd in _cmds)
-                cmd.Value.RegisterCommands(GetType().Assembly);
+            /*foreach (var cmd in _cmds)
+                cmd.Value.RegisterCommands(GetType().Assembly);*/
 
             await _client.StartAsync().ConfigureAwait(false);
         }
