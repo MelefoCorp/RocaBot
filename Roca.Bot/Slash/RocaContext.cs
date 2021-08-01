@@ -1,6 +1,6 @@
 ﻿namespace Roca.Bot.Slash
 {
-    public class RocaSlash
+    public class RocaContext
     {
     }
 }

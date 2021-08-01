@@ -13,6 +13,7 @@
     <PackageReference Include="DSharpPlus.Rest" Version="4.1.0-nightly-00930" />
     <PackageReference Include="DSharpPlus.VoiceNext" Version="4.1.0-nightly-00930" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>
