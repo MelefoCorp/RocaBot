@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Roca.Bot.Slash;
+using Roca.Bot.Slash.Builder;
 using Roca.Bot.Slash.Service;
 using Roca.Core.Extensions;
 using Roca.Core.Interfaces;

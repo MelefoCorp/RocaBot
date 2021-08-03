@@ -21,5 +21,11 @@ namespace Roca.Bot.Modules.Chat
                 await account.Save().ConfigureAwait(false);*/
             }
         }
+
+        [RocaCommand]
+        public async Task Command(string text, int nbr)
+        {
+
+        }
     }
 }
