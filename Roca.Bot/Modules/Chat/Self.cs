@@ -14,16 +14,16 @@ namespace Roca.Bot.Modules.Chat
             [RocaCommand]
             public async Task Ping()
             {
-                /*await Context.RespondAsync(GetType().GetLocalizer()["ping"]).ConfigureAwait(false);
-                await Task.Delay(1000).ConfigureAwait(true);
-                var account = await Context.User.GetAccount(false).ConfigureAwait(false);
-                await Context.RespondAsync(GetType().GetLocalizer()["pong"]).ConfigureAwait(false);
-                await account.Save().ConfigureAwait(false);*/
+                //await Context.RespondAsync(GetType().GetLocalizer()["ping"]).ConfigureAwait(false);
+                //await Task.Delay(1000).ConfigureAwait(true);
+                //var account = await Context.User.GetAccount(false).ConfigureAwait(false);
+                //await Context.RespondAsync(GetType().GetLocalizer()["pong"]).ConfigureAwait(false);
+                //await account.Save().ConfigureAwait(false);
             }
         }
 
         [RocaCommand]
-        public async Task Command(string text, int nbr)
+        public async Task Command()
         {
 
         }

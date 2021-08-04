@@ -1,7 +1,8 @@
 ﻿using Roca.Bot.Slash.Attributes;
 using Roca.Bot.Slash.Builder;
-using Roca.Bot.Slash.Info;
+using Roca.Bot.Slash.Readers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -23,7 +24,7 @@ namespace Roca.Bot.Slash.Service
 
             if (!type.IsAssignableTo(_moduleType))
                 return false;
-            if (!type.DeclaredMethods.Any(x => x.GetCustomAttribute<RocaCommandAttribute>() != null) && !type.DeclaredNestedTypes.Any(IsGroupCandidate))
+            if (!type.DeclaredMethods.Any(IsCommandCandidate) && !type.DeclaredNestedTypes.Any(IsGroupCandidate))
                 return false;
 
             return type.IsClass && !type.ContainsGenericParameters && !type.IsAbstract;
@@ -36,7 +37,9 @@ namespace Roca.Bot.Slash.Service
 
             if (!type.IsAssignableTo(_moduleType))
                 return false;
-            if (!type.DeclaredMethods.Any(x => x.GetCustomAttribute<RocaCommandAttribute>() != null))
+            if (type.GetCustomAttribute<RocaGroupAttribute>() == null)
+                return false;
+            if (!type.DeclaredMethods.Any(IsCommandCandidate))
                 return false;
 
             return type.IsClass && !type.ContainsGenericParameters && !type.IsAbstract;
@@ -72,9 +75,9 @@ namespace Roca.Bot.Slash.Service
             return list;
         }
 
-        public static IReadOnlyDictionary<Type, ModuleInfo> BuildModules(IEnumerable<TypeInfo> types, SlashService service, IServiceProvider services)
+        public static IReadOnlyDictionary<Type, Info.ModuleInfo> BuildModules(IEnumerable<TypeInfo> types, SlashService service, IServiceProvider services)
         {
-            var list = new Dictionary<Type, ModuleInfo>();
+            var list = new Dictionary<Type, Info.ModuleInfo>();
 
             foreach (var type in types)
             {

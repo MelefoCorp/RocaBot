@@ -8,7 +8,6 @@ using Roca.Bot.Slash.Service;
 using Roca.Core.Extensions;
 using Roca.Core.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -16,13 +15,17 @@ namespace Roca.Bot
 {
     public class RocaBot
     {
+        private static readonly MethodInfo _internalMethod = typeof(DiscordShardedClient)!.GetMethod("InitializeShardsAsync", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        private static readonly Func<DiscordShardedClient, Task<int>> _initializeShardsAsync = (Func<DiscordShardedClient, Task<int>>)Delegate.CreateDelegate(typeof(Func<DiscordShardedClient, Task<int>>), _internalMethod);
+
         private readonly DiscordShardedClient _client;
         private readonly IServiceProvider _services;
-        private Assembly _assembly;
+
+        internal Assembly Assembly;
 
         public RocaBot(IConfiguration configuration)
         {
-            _assembly = GetType().Assembly;
+            Assembly = GetType().Assembly;
 
             _client = new DiscordShardedClient(new DiscordConfiguration
             {
@@ -41,15 +44,20 @@ namespace Roca.Bot
             });
 
             _services = new ServiceCollection()
+                .AddSingleton(this)
                 .AddSingleton(_client)
-                .AddSingletonInterface<IService>(_assembly)
+                .AddSingletonInterface<IService>(Assembly)
                 .BuildServiceProvider();
         }
 
         public async Task Start()
         {
-            await _services.GetRequiredService<SlashService>().RegisterCommandsAsync(_assembly).ConfigureAwait(false);
+            await _initializeShardsAsync(_client).ConfigureAwait(false);
+
             await _client.StartAsync().ConfigureAwait(false);
+
+            foreach (var service in _services.GetServices<IService>())
+                await service.Enable().ConfigureAwait(false);
         }
 
         public async Task Stop()

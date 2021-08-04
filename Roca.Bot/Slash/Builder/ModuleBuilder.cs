@@ -9,9 +9,9 @@ namespace Roca.Bot.Slash.Builder
     {
         private SlashService _service;
         private ModuleBuilder? _parent;
-        private readonly List<CommandBuilder> _commands = new();
-        private readonly List<ModuleBuilder> _groups = new();
 
+        public readonly List<CommandBuilder> Commands = new();
+        public readonly List<ModuleBuilder> Groups = new();
         public string? Name { get; set; }
         public bool IsGroup { get; set; }
 
@@ -21,23 +21,20 @@ namespace Roca.Bot.Slash.Builder
             _parent = parent;
         }
 
-        public ModuleInfo Build()
-        {
-            return new();
-        }
+        public ModuleInfo Build(ModuleInfo? parent = null) => new(this, _service, parent);
 
         public void AddCommand(Action<CommandBuilder> action)
         {
             var builder = new CommandBuilder(this);
             action(builder);
-            _commands.Add(builder);
+            Commands.Add(builder);
         }
 
         public void AddModule(Action<ModuleBuilder> action)
         {
             var builder = new ModuleBuilder(_service, this);
             action(builder);
-            _groups.Add(builder);
+            Groups.Add(builder);
         }
     }
 }

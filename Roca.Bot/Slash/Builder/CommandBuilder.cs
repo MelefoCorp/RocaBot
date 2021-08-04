@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Roca.Bot.Slash.Info;
+using System;
 using System.Collections.Generic;
 
 namespace Roca.Bot.Slash.Builder
@@ -6,8 +7,8 @@ namespace Roca.Bot.Slash.Builder
     internal class CommandBuilder
     {
         private ModuleBuilder _module;
-        private List<ParameterBuilder> _parameters = new();
 
+        public List<ParameterBuilder> Parameters = new();
         public string? Name { get; set; }
 
         public CommandBuilder(ModuleBuilder module) => _module = module;
@@ -16,7 +17,9 @@ namespace Roca.Bot.Slash.Builder
         {
             var builder = new ParameterBuilder(this);
             action(builder);
-            _parameters.Add(builder);
+            Parameters.Add(builder);
         }
+
+        public CommandInfo Build(ModuleInfo module) => new(this, module);
     }
 }
