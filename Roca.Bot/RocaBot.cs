@@ -19,8 +19,11 @@ namespace Roca.Bot
         private readonly DiscordShardedClient _client;
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
+        private int _shards = 0;
 
         internal Assembly Assembly;
+
+        public event Func<DiscordShardedClient, Task> Ready;
 
         public RocaBot(IConfiguration configuration)
         {
@@ -60,32 +63,42 @@ namespace Roca.Bot
                 .AddSingleton(_client)
                 .AddSingletonInterface<IService>(Assembly)
                 .BuildServiceProvider();
+
+            _client.ShardReady += ShardReady;
+            Ready += EnableServices;
+        }
+
+        private async Task ShardReady(DiscordSocketClient _)
+        {
+            if (++_shards < _client.Shards.Count)
+                return;
+            _client.ShardReady -= ShardReady;
+
+            await Ready.Invoke(_client).ConfigureAwait(false);
+        }
+
+        private async Task EnableServices(DiscordShardedClient _)
+        {
+            foreach (var service in _services.GetServices<IService>())
+                await service.Enable().ConfigureAwait(false);
         }
 
         public async Task Start()
         {
             await _client.LoginAsync(TokenType.Bot, _configuration["RocaBot:Token"]).ConfigureAwait(false);
             await _client.StartAsync().ConfigureAwait(false);
-
-            _client.ShardReady += _client_ShardReady;
-
-        }
-
-        private async Task _client_ShardReady(DiscordSocketClient arg)
-        {
-            _client.ShardReady -= _client_ShardReady;
-
-            foreach (var service in _services.GetServices<IService>())
-                await service.Enable().ConfigureAwait(false);
         }
 
         public async Task Stop()
         {
+            _shards = 0;
+
             foreach (var service in _services.GetServices<IService>())
                 await service.Disable().ConfigureAwait(false);
 
             await _client.StopAsync().ConfigureAwait(false);
             await _client.LogoutAsync().ConfigureAwait(false);
+
         }
     }
 }
