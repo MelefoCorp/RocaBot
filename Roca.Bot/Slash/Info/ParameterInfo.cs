@@ -1,4 +1,4 @@
-﻿using DSharpPlus;
+﻿using Discord;
 using Roca.Bot.Slash.Builder;
 using Roca.Bot.Slash.Readers;
 using System;

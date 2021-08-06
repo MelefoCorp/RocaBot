@@ -1,4 +1,4 @@
-﻿using DSharpPlus;
+﻿using Discord;
 using System;
 using System.Threading.Tasks;
 

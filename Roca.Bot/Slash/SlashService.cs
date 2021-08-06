@@ -1,6 +1,6 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
+﻿using Discord;
+using Discord.Rest;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Roca.Bot.Slash.Info;
 using Roca.Bot.Slash.Readers;
@@ -14,7 +14,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Roca.Bot.Slash.Builder
+namespace Roca.Bot.Slash
 {
     public class SlashService : IService
     {
@@ -101,51 +101,85 @@ namespace Roca.Bot.Slash.Builder
                     _modules.TryAdd(module.Key, module.Value);
             }
 
-            List<DiscordApplicationCommand> commands = new();
+            List<SlashCommandCreationProperties> commands = new();
+
             foreach (var module in _modules.Values)
             {
                 if (module.Name == null)
                 {
-                    foreach(var command in module.Commands)
-                        commands.Add(new(command.Name, command.Description, AddParameters(command.Parameters)));
+                    foreach (var command in module.Commands)
+                        commands.Add(new SlashCommandBuilder
+                        {
+                            Name = command.Name,
+                            Description = command.Description,
+                            Options = AddParameters(command.Parameters)
+                        }.Build());
                 }
                 else
-                    commands.Add(new(module.Name, module.Description, AddModule(module)));
+                    commands.Add(new SlashCommandBuilder
+                    {
+                        Name = module.Name,
+                        Description = module.Description,
+                        Options = AddModule(module)
+                    }.Build());
             }
 
-            var client = _services.GetRequiredService<DiscordShardedClient>();
-           await client.ShardClients[0].BulkOverwriteGlobalApplicationCommandsAsync(commands).ConfigureAwait(false);
+           await _client.Rest.BulkOverwriteGlobalCommands(commands.ToArray()).ConfigureAwait(false);
         }
 
-        private List<DiscordApplicationCommandOption> AddModule(ModuleInfo module)
+        private List<SlashCommandOptionBuilder> AddModule(ModuleInfo module)
         {
-            List<DiscordApplicationCommandOption> subs = new();
+            List<SlashCommandOptionBuilder> subs = new();
 
             foreach (var command in module.Commands)
-                subs.Add(new(command.Name, command.Description, ApplicationCommandOptionType.SubCommand, null, null, AddParameters(command.Parameters)));
+                subs.Add(new()
+                { 
+                    Name = command.Name,
+                    Description = command.Description,
+                    Type = ApplicationCommandOptionType.SubCommand,
+                    Options = AddParameters(command.Parameters)
+                });
 
             foreach (var group in module.Groups)
-                subs.Add(new(group.Name!, group.Description, ApplicationCommandOptionType.SubCommandGroup, null, null, AddCommands(group.Commands)));
+                subs.Add(new()
+                {
+                    Name = group.Name!,
+                    Description = group.Description,
+                    Type = ApplicationCommandOptionType.SubCommandGroup,
+                    Options = AddCommands(group.Commands)
+                });
 
             return subs;
         }
 
-        private List<DiscordApplicationCommandOption> AddCommands(IReadOnlyCollection<Info.CommandInfo> commands)
+        private List<SlashCommandOptionBuilder> AddCommands(IReadOnlyCollection<CommandInfo> commands)
         {
-            List<DiscordApplicationCommandOption> options = new();
+            List<SlashCommandOptionBuilder> options = new();
 
             foreach (var command in commands)
-                options.Add(new(command.Name, command.Description, ApplicationCommandOptionType.SubCommand, null, null, AddParameters(command.Parameters)));
+                options.Add(new()
+                {
+                    Name = command.Name,
+                    Description = command.Description,
+                    Type = ApplicationCommandOptionType.SubCommand,
+                    Options = AddParameters(command.Parameters)
+                });
 
             return options;
         }
 
-        private List<DiscordApplicationCommandOption> AddParameters(IReadOnlyCollection<Info.ParameterInfo> parameters)
+        private List<SlashCommandOptionBuilder> AddParameters(IReadOnlyCollection<Info.ParameterInfo> parameters)
         {
-            List<DiscordApplicationCommandOption> options = new();
+            List<SlashCommandOptionBuilder> options = new();
 
             foreach (var parameter in parameters)
-                options.Add(new DiscordApplicationCommandOption(parameter.Name, parameter.Description, parameter.OptionType, parameter.IsOptional));
+                options.Add(new()
+                {
+                    Name = parameter.Name,
+                    Description = parameter.Description,
+                    Type = parameter.OptionType,
+                    Required = !parameter.IsOptional
+                });
 
             return options;
         }
@@ -155,17 +189,14 @@ namespace Roca.Bot.Slash.Builder
             throw new NotImplementedException();
         }
 
-        private async Task HandleInteractionAsync(DiscordClient sender, InteractionCreateEventArgs e)
+        private async Task HandleInteractionAsync(SocketInteraction interaction)
         {
-            if (e.Handled)
-                return;
-            
-            switch (e.Interaction.Type)
+            switch (interaction)
             {
-                case InteractionType.ApplicationCommand:
+                case SocketSlashCommand command:
                     await HandleCommandAsync().ConfigureAwait(false);
                     return;
-                case InteractionType.Component:
+                case SocketMessageComponent component:
                     await HandleComponentAsync().ConfigureAwait(false);
                     return;
             }

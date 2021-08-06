@@ -1,13 +1,14 @@
-﻿using DSharpPlus;
+﻿using Discord;
+using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Roca.Bot.Slash;
 using Roca.Bot.Slash.Builder;
 using Roca.Bot.Slash.Service;
 using Roca.Core.Extensions;
 using Roca.Core.Interfaces;
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -15,11 +16,9 @@ namespace Roca.Bot
 {
     public class RocaBot
     {
-        private static readonly MethodInfo _internalMethod = typeof(DiscordShardedClient)!.GetMethod("InitializeShardsAsync", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        private static readonly Func<DiscordShardedClient, Task<int>> _initializeShardsAsync = (Func<DiscordShardedClient, Task<int>>)Delegate.CreateDelegate(typeof(Func<DiscordShardedClient, Task<int>>), _internalMethod);
-
         private readonly DiscordShardedClient _client;
         private readonly IServiceProvider _services;
+        private readonly IConfiguration _configuration;
 
         internal Assembly Assembly;
 
@@ -27,21 +26,34 @@ namespace Roca.Bot
         {
             Assembly = GetType().Assembly;
 
-            _client = new DiscordShardedClient(new DiscordConfiguration
+            _configuration = configuration;
+
+            if (!int.TryParse(_configuration["RocaBot:Shards"], out int shards))
+                throw new ArgumentException("You must put a valid number in \"Shards\" variable of \"RocaBot\" section inside your configuration");
+
+            _client = new DiscordShardedClient(new DiscordSocketConfig
             {
-                Token = configuration["RocaBot:Token"],
-                TokenType = TokenType.Bot,
-                AlwaysCacheMembers = true,
-                UseRelativeRatelimit = true,
+                AlwaysAcknowledgeInteractions = false,
+                GatewayIntents = GatewayIntents.All,
+                LargeThreshold = 250,
+                AlwaysDownloadUsers = true,
+                TotalShards = shards,
                 MessageCacheSize = 4096,
-                AutoReconnect = true,
-                Intents = DiscordIntents.All,
+                DefaultRetryMode = RetryMode.AlwaysRetry,
+                MaxWaitBetweenGuildAvailablesBeforeReady = 10,
 #if DEBUG
-                MinimumLogLevel = LogLevel.Debug
+                LogLevel = LogSeverity.Debug
 #else
-                MinimumLogLevel = LogLevel.Warning
+                LogLevel = LogSeverity.Warning
 #endif
             });
+
+            //TODO Add a custom Logger
+            _client.Log += l =>
+            {
+                Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message}");
+                return Task.CompletedTask;
+            };
 
             _services = new ServiceCollection()
                 .AddSingleton(this)
@@ -52,9 +64,16 @@ namespace Roca.Bot
 
         public async Task Start()
         {
-            await _initializeShardsAsync(_client).ConfigureAwait(false);
-
+            await _client.LoginAsync(TokenType.Bot, _configuration["RocaBot:Token"]).ConfigureAwait(false);
             await _client.StartAsync().ConfigureAwait(false);
+
+            _client.ShardReady += _client_ShardReady;
+
+        }
+
+        private async Task _client_ShardReady(DiscordSocketClient arg)
+        {
+            _client.ShardReady -= _client_ShardReady;
 
             foreach (var service in _services.GetServices<IService>())
                 await service.Enable().ConfigureAwait(false);
@@ -62,8 +81,11 @@ namespace Roca.Bot
 
         public async Task Stop()
         {
-            await _services.GetRequiredService<SlashService>().UnregisterCommandsAsync().ConfigureAwait(false);
+            foreach (var service in _services.GetServices<IService>())
+                await service.Disable().ConfigureAwait(false);
+
             await _client.StopAsync().ConfigureAwait(false);
+            await _client.LogoutAsync().ConfigureAwait(false);
         }
     }
 }
