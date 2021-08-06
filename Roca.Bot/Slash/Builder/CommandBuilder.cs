@@ -10,6 +10,7 @@ namespace Roca.Bot.Slash.Builder
 
         public List<ParameterBuilder> Parameters = new();
         public string? Name { get; set; }
+        public string? Description { get; set; }
 
         public CommandBuilder(ModuleBuilder module) => _module = module;
 

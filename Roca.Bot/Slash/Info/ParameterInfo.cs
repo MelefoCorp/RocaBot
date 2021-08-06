@@ -11,6 +11,7 @@ namespace Roca.Bot.Slash.Info
 
         public CommandInfo Command { get; }
         public string Name { get; }
+        public string Description { get; }
         public bool IsOptional { get; }
         public object? DefaultValue { get; }
         public Type Type { get; }
@@ -21,6 +22,7 @@ namespace Roca.Bot.Slash.Info
         {
             Command = command;
             Name = builder.Name!;
+            Description = builder.Description!;
             IsOptional = builder.IsOptional;
             DefaultValue = builder.DefaultValue;
             Type = builder.Type!;

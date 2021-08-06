@@ -1,4 +1,5 @@
-﻿using Roca.Bot.Slash;
+﻿using Microsoft.Extensions.Localization;
+using Roca.Bot.Slash;
 using Roca.Bot.Slash.Attributes;
 using Roca.Core;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace Roca.Bot.Modules.Chat
     [RocaModule("self")]
     public class Self : RocaBase
     {
-        [RocaGroup("test")]
+        [RocaModule("test")]
         public class Test : RocaBase
         {
             [RocaCommand]

@@ -90,7 +90,6 @@ namespace Roca.Bot.Slash.Builder
 
         public async Task RegisterCommandsAsync(params Assembly[] assemblies)
         {
-            //TODO add command description
             //TODO add choices (a.k.a enum ?)
             //TODO add permissions
             foreach (var assembly in assemblies)
@@ -108,10 +107,10 @@ namespace Roca.Bot.Slash.Builder
                 if (module.Name == null)
                 {
                     foreach(var command in module.Commands)
-                        commands.Add(new(command.Name.ToLowerInvariant(), "command TODO DESC", AddParameters(command.Parameters)));
+                        commands.Add(new(command.Name, command.Description, AddParameters(command.Parameters)));
                 }
                 else
-                    commands.Add(new(module.Name.ToLowerInvariant(), "module TODO DESC", AddModule(module)));
+                    commands.Add(new(module.Name, module.Description, AddModule(module)));
             }
 
             var client = _services.GetRequiredService<DiscordShardedClient>();
@@ -123,10 +122,10 @@ namespace Roca.Bot.Slash.Builder
             List<DiscordApplicationCommandOption> subs = new();
 
             foreach (var command in module.Commands)
-                subs.Add(new(command.Name.ToLowerInvariant(), "command TODO DESC", ApplicationCommandOptionType.SubCommand, null, null, AddParameters(command.Parameters)));
+                subs.Add(new(command.Name, command.Description, ApplicationCommandOptionType.SubCommand, null, null, AddParameters(command.Parameters)));
 
             foreach (var group in module.Groups)
-                subs.Add(new(group.Name!.ToLowerInvariant(), "group TODO DESC", ApplicationCommandOptionType.SubCommandGroup, null, null, AddCommands(group.Commands)));
+                subs.Add(new(group.Name!, group.Description, ApplicationCommandOptionType.SubCommandGroup, null, null, AddCommands(group.Commands)));
 
             return subs;
         }
@@ -136,7 +135,7 @@ namespace Roca.Bot.Slash.Builder
             List<DiscordApplicationCommandOption> options = new();
 
             foreach (var command in commands)
-                options.Add(new(command.Name.ToLowerInvariant(), "command TODO DESC", ApplicationCommandOptionType.SubCommand, null, null, AddParameters(command.Parameters)));
+                options.Add(new(command.Name, command.Description, ApplicationCommandOptionType.SubCommand, null, null, AddParameters(command.Parameters)));
 
             return options;
         }
@@ -146,7 +145,7 @@ namespace Roca.Bot.Slash.Builder
             List<DiscordApplicationCommandOption> options = new();
 
             foreach (var parameter in parameters)
-                options.Add(new DiscordApplicationCommandOption(parameter.Name.ToLowerInvariant(), "parameter TODO DESC", parameter.OptionType, parameter.IsOptional));
+                options.Add(new DiscordApplicationCommandOption(parameter.Name, parameter.Description, parameter.OptionType, parameter.IsOptional));
 
             return options;
         }

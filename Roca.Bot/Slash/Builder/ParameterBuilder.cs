@@ -9,6 +9,8 @@ namespace Roca.Bot.Slash.Builder
         private CommandBuilder _command;
 
         public string? Name { get; set; }
+        public string? Description { get; set; }
+
         public bool IsOptional { get; set; }
         public object? DefaultValue { get; set; }
         public Type? Type { get; set; }

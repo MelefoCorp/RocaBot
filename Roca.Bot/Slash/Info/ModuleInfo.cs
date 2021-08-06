@@ -8,6 +8,8 @@ namespace Roca.Bot.Slash.Info
     {
         public SlashService Service { get; }
         public string? Name { get; }
+        public string? Description { get; }
+
         public IReadOnlyCollection<CommandInfo> Commands { get; }
         public IReadOnlyCollection<ModuleInfo> Groups { get; }
         public ModuleInfo? Parent { get; }
@@ -17,6 +19,7 @@ namespace Roca.Bot.Slash.Info
         {
             Service = service;
             Name = builder.Name;
+            Description = builder.Description;
             Commands = builder.Commands.Select(x => x.Build(this)).ToArray();
             Groups = builder.Groups.Select(x => x.Build(this)).ToArray();
         }

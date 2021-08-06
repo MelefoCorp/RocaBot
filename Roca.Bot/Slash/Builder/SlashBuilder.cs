@@ -1,6 +1,7 @@
 ﻿using Roca.Bot.Slash.Attributes;
 using Roca.Bot.Slash.Builder;
 using Roca.Bot.Slash.Readers;
+using Roca.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -30,20 +31,8 @@ namespace Roca.Bot.Slash.Service
             return type.IsClass && !type.ContainsGenericParameters && !type.IsAbstract;
         }
 
-        public static bool IsGroupCandidate(this TypeInfo type)
-        {
-            if (type.GetCustomAttribute<CompilerGeneratedAttribute>() != null)
-                return false;
-
-            if (!type.IsAssignableTo(_moduleType))
-                return false;
-            if (type.GetCustomAttribute<RocaGroupAttribute>() == null)
-                return false;
-            if (!type.DeclaredMethods.Any(IsCommandCandidate))
-                return false;
-
-            return type.IsClass && !type.ContainsGenericParameters && !type.IsAbstract;
-        }
+        public static bool IsGroupCandidate(this TypeInfo type) =>
+            type.IsModuleCandidate() && type.GetCustomAttribute<RocaModuleAttribute>() != null;
 
         public static bool IsCommandCandidate(this MethodInfo method)
         {
@@ -107,21 +96,14 @@ namespace Roca.Bot.Slash.Service
                 switch (attribute)
                 {
                     case RocaModuleAttribute module:
-                        if (!string.IsNullOrWhiteSpace(builder.Name) && builder.IsGroup)
-                            throw new RocaBuilderException("A class cannot be at the same time a module & a group");
-                        if (string.IsNullOrWhiteSpace(module.Name))
-                            throw new RocaBuilderException("Module must have a name");
-                        builder.Name = module.Name;
-                        break;
-                    case RocaGroupAttribute group:
-                        if (!string.IsNullOrWhiteSpace(builder.Name) && !builder.IsGroup)
-                            throw new RocaBuilderException("A class cannot be at the same time a module & a group");
-                        if (string.IsNullOrWhiteSpace(group.Name))
-                            throw new RocaBuilderException("Group must have a name");
-                        builder.Name = group.Name;
-                        builder.IsGroup = true;
+                        builder.Name = module.Name.ToLowerInvariant();
                         break;
                 }
+
+            if (string.IsNullOrWhiteSpace(builder.Name))
+                throw new RocaBuilderException("Module must have a name");
+
+            builder.Description = type.GetLocalizer()[$"{type.Name}_desc"];
 
             foreach (var command in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(IsCommandCandidate))
                 builder.AddCommand(x => BuildCommand(x, type, command, service, services));
@@ -133,25 +115,29 @@ namespace Roca.Bot.Slash.Service
                 switch (attribute)
                 {
                     case RocaCommandAttribute command:
-                        builder.Name = command.Name;
+                        builder.Name = command.Name.ToLowerInvariant();
                         break;
                 }
 
             if (string.IsNullOrWhiteSpace(builder.Name))
                 throw new RocaBuilderException("Command must have a name");
 
+            builder.Description = type.GetLocalizer()[$"{builder.Name}_desc"];
+
             foreach (var parameter in method.GetParameters())
-                builder.AddParameter(x => BuildParameter(x, parameter, service, services));
+                builder.AddParameter(x => BuildParameter(x, parameter, builder, service, services));
 
         }
 
-        private static void BuildParameter(ParameterBuilder builder, ParameterInfo parameter, SlashService service, IServiceProvider services)
+        private static void BuildParameter(ParameterBuilder builder, ParameterInfo parameter, CommandBuilder command, SlashService service, IServiceProvider services)
         {
-
-            builder.Name = parameter.Name;
+            builder.Name = parameter.Name!.ToLowerInvariant();
             builder.IsOptional = parameter.IsOptional;
             builder.DefaultValue = parameter.DefaultValue;
             builder.Type = parameter.ParameterType;
+
+            var type = parameter.Member.ReflectedType!;
+            builder.Description = type.GetLocalizer()[$"{command.Name}_{builder.Name}_desc"];
 
             //TODO add type reader/parser
         }

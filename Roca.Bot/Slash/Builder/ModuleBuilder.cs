@@ -13,7 +13,7 @@ namespace Roca.Bot.Slash.Builder
         public readonly List<CommandBuilder> Commands = new();
         public readonly List<ModuleBuilder> Groups = new();
         public string? Name { get; set; }
-        public bool IsGroup { get; set; }
+        public string? Description { get; set; }
 
         public ModuleBuilder(SlashService service, ModuleBuilder? parent)
         {
