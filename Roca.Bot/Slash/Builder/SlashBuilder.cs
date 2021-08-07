@@ -139,7 +139,9 @@ namespace Roca.Bot.Slash.Service
             var type = parameter.Member.ReflectedType!;
             builder.Description = type.GetLocalizer()[$"{command.Name}_{builder.Name}_desc"];
 
-            //TODO add type reader/parser
+            if (!service.TypeReaders.TryGetValue(builder.Type, out var reader))
+                throw new ArgumentException("A command doesn't contains a valid argument type");
+            builder.TypeReader = reader;
         }
     }
 

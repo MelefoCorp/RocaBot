@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Roca.Bot.Slash.Info;
@@ -7,6 +6,7 @@ using Roca.Bot.Slash.Readers;
 using Roca.Bot.Slash.Service;
 using Roca.Core;
 using Roca.Core.Interfaces;
+using Roca.Core.Translation;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -20,17 +20,20 @@ namespace Roca.Bot.Slash
     {
         private DiscordShardedClient _client;
         private IServiceProvider _services;
-        private ConcurrentDictionary<Type, TypeReader> _typeReaders = new();
         private ConcurrentDictionary<Type, ModuleInfo> _modules = new();
         private bool _enabled;
+        private RocaLocalizer _localizer;
+
+        internal ConcurrentDictionary<Type, TypeReader> TypeReaders = new();
 
         public SlashService(DiscordShardedClient client, IServiceProvider? services)
         {
             _client = client;
             _services = services ?? EmptyServiceProvider.Instance;
+            _localizer = GetType().GetLocalizer();
 
             //STRING
-            //_typeReaders[typeof(string)] =
+            TypeReaders[typeof(string)] = new StringTypeReader();
 
             //INTEGER
             //_typeReaders[typeof(sbyte)] = sbyte.TryParse;
@@ -39,28 +42,28 @@ namespace Roca.Bot.Slash
             //_typeReaders[typeof(ushort)] = ushort.TryParse;
             //_typeReaders[typeof(int)] = int.TryParse;
             //_typeReaders[typeof(uint)] = uint.TryParse;
-            //_typeReaders[typeof(long)] = long.TryParse;
+            TypeReaders[typeof(long)] = new IntegerTypeReader();
             //_typeReaders[typeof(ulong)] = ulong.TryParse;
 
             //BOOLEAN
-            //_typeReaders[typeof(bool)] = bool.TryParse;
+            TypeReaders[typeof(bool)] = new BooleanTypeReader();
 
             //USER
-            //_typeReaders[typeof(DiscordUser)] =
+            TypeReaders[typeof(IUser)] = new UserTypeReader();
 
 
             //CHANNEL
-            //_typeReaders[typeof(DiscordChannel)] =
+            TypeReaders[typeof(IChannel)] = new ChannelTypeReader();
 
             //ROLE
-            //_typeReaders[typeof(DiscordRole)] = 
+            TypeReaders[typeof(IRole)] = new RoleTypeReader();
 
             //MENTIONABLE
-
+            TypeReaders[typeof(IMentionable)] = new MentionableTypeReader();
 
             //NUMBER
             //_typeReaders[typeof(float)] = float.TryParse;
-            //_typeReaders[typeof(double)] = double.TryParse;
+            TypeReaders[typeof(double)] = new NumberTypeReader();
             //_typeReaders[typeof(decimal)] = decimal.TryParse;
         }
 
@@ -194,23 +197,42 @@ namespace Roca.Bot.Slash
             switch (interaction)
             {
                 case SocketSlashCommand command:
-                    await HandleCommandAsync().ConfigureAwait(false);
-                    return;
-                case SocketMessageComponent component:
-                    await HandleComponentAsync().ConfigureAwait(false);
+                    await HandleCommandAsync(command).ConfigureAwait(false);
                     return;
             }
 
         }
 
-        private async Task HandleCommandAsync()
+        private async Task HandleCommandAsync(SocketSlashCommand command)
         {
+            //TODO Improve how to find command 
+            try
+            {
+                CommandInfo result;
+
+                if (command.Data.Options.Count == 1 && command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommandGroup)
+                    result = FindCommand(FindModule(command).Groups, command.Data.Options.First());
+                else if (command.Data.Options.Count == 1 && command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommand)
+                    result = FindCommand(FindModule(command).Commands, command.Data.Options.First());
+                else
+                    result = _modules.Values.Where(x => x.Name == null).SelectMany(x => x.Commands).Single(x => x.Name == command.Data.Name);
+
+                await result.ExecuteAsync(command).ConfigureAwait(false);
+            }
+            catch (InvalidOperationException)
+            {
+                await command.RespondAsync(_localizer["cmd_not_found"], ephemeral: true).ConfigureAwait(false);
+            }
         }
 
-        private async Task HandleComponentAsync()
-        {
+        private ModuleInfo FindModule(SocketSlashCommand command) =>
+            _modules.Values.Single(x => x.Name == command.Data.Name);
 
-        }
+        private CommandInfo FindCommand(IEnumerable<ModuleInfo> groups, SocketSlashCommandDataOption command) =>
+            FindCommand(groups.Single(x => x.Name == command.Name).Commands, command.Options.First());
+
+        private CommandInfo FindCommand(IEnumerable<CommandInfo> commands, SocketSlashCommandDataOption command) => 
+            commands.Single(x => x.Name == command.Name);
 
         public void Dispose() => GC.SuppressFinalize(this);
     }

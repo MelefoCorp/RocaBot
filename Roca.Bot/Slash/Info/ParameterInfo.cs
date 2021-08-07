@@ -26,6 +26,7 @@ namespace Roca.Bot.Slash.Info
             IsOptional = builder.IsOptional;
             DefaultValue = builder.DefaultValue;
             Type = builder.Type!;
+            _typeReader = builder.TypeReader;
         }
     }
 }

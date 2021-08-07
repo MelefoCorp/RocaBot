@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Localization;
+﻿using Discord;
+using Microsoft.Extensions.Localization;
 using Roca.Bot.Slash;
 using Roca.Bot.Slash.Attributes;
 using Roca.Core;
@@ -24,9 +25,8 @@ namespace Roca.Bot.Modules.Chat
         }
 
         [RocaCommand]
-        public async Task Command()
+        public async Task Command(string @string, long interger, bool boolean, IUser user, IChannel channel, IRole role, IMentionable mentionable, double number)
         {
-
         }
     }
 }

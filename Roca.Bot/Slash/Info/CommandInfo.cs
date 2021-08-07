@@ -1,6 +1,9 @@
-﻿using Roca.Bot.Slash.Builder;
+﻿using Discord.WebSocket;
+using Roca.Bot.Slash.Builder;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Roca.Bot.Slash.Info
 {
@@ -18,6 +21,13 @@ namespace Roca.Bot.Slash.Info
             Name = builder.Name!;
             Description = builder.Description!;
             Parameters = builder.Parameters.Select(x => x.Build(this)).ToArray();
+        }
+
+        public async Task ExecuteAsync(SocketSlashCommand command)
+        {
+            await command.DeferAsync().ConfigureAwait(false);
+
+
         }
     }
 }
