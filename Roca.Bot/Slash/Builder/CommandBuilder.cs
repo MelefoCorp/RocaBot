@@ -7,12 +7,12 @@ namespace Roca.Bot.Slash.Builder
 {
     internal class CommandBuilder
     {
-        private ModuleBuilder _module;
+        private readonly ModuleBuilder _module;
 
         public List<ParameterBuilder> Parameters = new();
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public Func<RocaContext, object[], IServiceProvider, Task> Callback { get; set; }
+        public Func<RocaContext, object[], IServiceProvider, Task>? Callback { get; set; }
 
 
         public CommandBuilder(ModuleBuilder module) => _module = module;

@@ -1,10 +1,15 @@
-﻿using System;
+﻿using Discord.Commands;
+using System;
 
 namespace Roca.Bot.Slash
 {
-    public class RocaBase : IDisposable
+    public class RocaBase : RocaBase<RocaContext> 
     {
-        public RocaContext Context { get; internal set; }
+    }
+
+    public class RocaBase<T> : IDisposable where T : class, ICommandContext
+    {
+        public T Context { get; internal set; }
 
         public void Dispose() => GC.SuppressFinalize(this);
     }

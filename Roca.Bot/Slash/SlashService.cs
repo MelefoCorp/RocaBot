@@ -18,11 +18,11 @@ namespace Roca.Bot.Slash
 {
     public class SlashService : IService
     {
-        private DiscordShardedClient _client;
-        private IServiceProvider _services;
-        private ConcurrentDictionary<Type, ModuleInfo> _modules = new();
+        private readonly DiscordShardedClient _client;
+        private readonly IServiceProvider _services;
+        private readonly ConcurrentDictionary<Type, ModuleInfo> _modules = new();
         private bool _enabled;
-        private RocaLocalizer _localizer;
+        private readonly RocaLocalizer _localizer;
 
         internal ConcurrentDictionary<Type, TypeReader> TypeReaders = new();
 
@@ -130,7 +130,7 @@ namespace Roca.Bot.Slash
            await _client.Rest.BulkOverwriteGlobalCommands(commands.ToArray()).ConfigureAwait(false);
         }
 
-        private List<SlashCommandOptionBuilder> AddModule(ModuleInfo module)
+        private static List<SlashCommandOptionBuilder> AddModule(ModuleInfo module)
         {
             List<SlashCommandOptionBuilder> subs = new();
 
@@ -155,7 +155,7 @@ namespace Roca.Bot.Slash
             return subs;
         }
 
-        private List<SlashCommandOptionBuilder> AddCommands(IReadOnlyCollection<CommandInfo> commands)
+        private static List<SlashCommandOptionBuilder> AddCommands(IReadOnlyCollection<CommandInfo> commands)
         {
             List<SlashCommandOptionBuilder> options = new();
 
@@ -171,7 +171,7 @@ namespace Roca.Bot.Slash
             return options;
         }
 
-        private List<SlashCommandOptionBuilder> AddParameters(IReadOnlyCollection<Info.ParameterInfo> parameters)
+        private static List<SlashCommandOptionBuilder> AddParameters(IReadOnlyCollection<Info.ParameterInfo> parameters)
         {
             List<SlashCommandOptionBuilder> options = new();
 
@@ -221,7 +221,7 @@ namespace Roca.Bot.Slash
                     opts = command.Data.Options;
                 }
                 
-                await result.ExecuteAsync(command, opts, _services).ConfigureAwait(false);
+                await result.ExecuteAsync(command, opts, _client, _services).ConfigureAwait(false);
             }
             catch (InvalidOperationException)
             {
@@ -232,10 +232,10 @@ namespace Roca.Bot.Slash
         private ModuleInfo FindModule(SocketSlashCommand command) =>
             _modules.Values.Single(x => x.Name == command.Data.Name);
 
-        private (CommandInfo, IEnumerable<SocketSlashCommandDataOption>) FindCommand(IEnumerable<ModuleInfo> groups, SocketSlashCommandDataOption command) =>
+        private static (CommandInfo, IEnumerable<SocketSlashCommandDataOption>) FindCommand(IEnumerable<ModuleInfo> groups, SocketSlashCommandDataOption command) =>
             FindCommand(groups.Single(x => x.Name == command.Name).Commands, command.Options.First());
 
-        private (CommandInfo, IEnumerable<SocketSlashCommandDataOption>) FindCommand(IEnumerable<CommandInfo> commands, SocketSlashCommandDataOption command) => 
+        private static (CommandInfo, IEnumerable<SocketSlashCommandDataOption>) FindCommand(IEnumerable<CommandInfo> commands, SocketSlashCommandDataOption command) => 
             (commands.Single(x => x.Name == command.Name), command.Options);
 
         public void Dispose() => GC.SuppressFinalize(this);

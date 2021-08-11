@@ -28,7 +28,7 @@ namespace Roca.Bot.Slash.Info
             IsOptional = builder.IsOptional;
             DefaultValue = builder.DefaultValue;
             Type = builder.Type!;
-            _typeReader = builder.TypeReader;
+            _typeReader = builder.TypeReader!;
         }
 
         public async Task<object> ParseAsync(RocaContext context, SocketSlashCommandDataOption option, IServiceProvider services) => 

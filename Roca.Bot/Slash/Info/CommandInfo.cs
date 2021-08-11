@@ -23,21 +23,20 @@ namespace Roca.Bot.Slash.Info
             Name = builder.Name!;
             Description = builder.Description!;
             Parameters = builder.Parameters.Select(x => x.Build(this)).ToArray();
-            _callback = builder.Callback;
+            _callback = builder.Callback!;
         }
 
-        public async Task ExecuteAsync(SocketSlashCommand command, IEnumerable<SocketSlashCommandDataOption> opts, IServiceProvider provider)
+        public async Task ExecuteAsync(SocketSlashCommand command, IEnumerable<SocketSlashCommandDataOption> opts,DiscordShardedClient client, IServiceProvider provider)
         {
             await command.DeferAsync().ConfigureAwait(false);
-
             try
             {
-                var ctx = new RocaContext();
+                RocaContext ctx = new(client, command);
                 var args = await GetArguments(ctx, opts, provider).ConfigureAwait(false);
 
                 await _callback(ctx, args, provider).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 
             }
@@ -46,6 +45,9 @@ namespace Roca.Bot.Slash.Info
         //TODO Better opts/args parsing
         private async Task<object[]> GetArguments(RocaContext context, IEnumerable<SocketSlashCommandDataOption> opts, IServiceProvider provider)
         {
+            if (opts == null)
+                return Array.Empty<object>();
+
             object[] args = new object[Parameters.Count];
             var array = opts.ToArray();
 

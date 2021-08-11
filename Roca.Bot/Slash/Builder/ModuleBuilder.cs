@@ -7,8 +7,8 @@ namespace Roca.Bot.Slash.Builder
 {
     internal class ModuleBuilder
     {
-        private SlashService _service;
-        private ModuleBuilder? _parent;
+        private readonly SlashService _service;
+        private readonly ModuleBuilder? _parent;
 
         public readonly List<CommandBuilder> Commands = new();
         public readonly List<ModuleBuilder> Groups = new();

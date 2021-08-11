@@ -107,10 +107,10 @@ namespace Roca.Bot.Slash.Service
             builder.Description = type.GetLocalizer()[$"{type.Name}_desc"];
 
             foreach (var command in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(IsCommandCandidate))
-                builder.AddCommand(x => BuildCommand(x, type, command, service, services));
+                builder.AddCommand(x => BuildCommand(x, type, command, service));
         }
 
-        private static void BuildCommand(CommandBuilder builder, TypeInfo type, MethodInfo method, SlashService service, IServiceProvider services)
+        private static void BuildCommand(CommandBuilder builder, TypeInfo type, MethodInfo method, SlashService service)
         {
             foreach (var attribute in method.GetCustomAttributes())
                 switch (attribute)
@@ -126,7 +126,7 @@ namespace Roca.Bot.Slash.Service
             builder.Description = type.GetLocalizer()[$"{builder.Name}_desc"];
 
             foreach (var parameter in method.GetParameters())
-                builder.AddParameter(x => BuildParameter(x, parameter, builder, service, services));
+                builder.AddParameter(x => BuildParameter(x, parameter, builder, service));
 
             builder.Callback = async (RocaContext context, object[] args, IServiceProvider provider) =>
             {
@@ -157,7 +157,7 @@ namespace Roca.Bot.Slash.Service
             return (RocaBase)instance;
         }
 
-        private static void BuildParameter(ParameterBuilder builder, ParameterInfo parameter, CommandBuilder command, SlashService service, IServiceProvider services)
+        private static void BuildParameter(ParameterBuilder builder, ParameterInfo parameter, CommandBuilder command, SlashService service)
         {
             builder.Name = parameter.Name!.ToLowerInvariant();
             builder.IsOptional = parameter.IsOptional;
