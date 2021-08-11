@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\RocaCore\Roca.Core\Roca.Core.csproj" />
+    <ProjectReference Include="..\RocaCore\Roca.Core\Roca.Core.csproj" />
   </ItemGroup>
 
 </Project>

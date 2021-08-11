@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31521.260
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roca.Bot", "Roca.Bot\Roca.Bot.csproj", "{678A4C4E-F937-435C-8A78-B1CD75D22391}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roca.Bot", "Roca.Bot\Roca.Bot.csproj", "{678A4C4E-F937-435C-8A78-B1CD75D22391}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E} = {6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roca.Core", "RocaCore\Roca.Core\Roca.Core.csproj", "{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +20,10 @@ Global
 		{678A4C4E-F937-435C-8A78-B1CD75D22391}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{678A4C4E-F937-435C-8A78-B1CD75D22391}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{678A4C4E-F937-435C-8A78-B1CD75D22391}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
