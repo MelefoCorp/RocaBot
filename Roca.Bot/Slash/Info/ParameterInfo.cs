@@ -1,7 +1,9 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using Roca.Bot.Slash.Builder;
 using Roca.Bot.Slash.Readers;
 using System;
+using System.Threading.Tasks;
 
 namespace Roca.Bot.Slash.Info
 {
@@ -28,5 +30,8 @@ namespace Roca.Bot.Slash.Info
             Type = builder.Type!;
             _typeReader = builder.TypeReader;
         }
+
+        public async Task<object> ParseAsync(RocaContext context, SocketSlashCommandDataOption option, IServiceProvider services) => 
+            await _typeReader.ReadAsync(context, option, services).ConfigureAwait(false);
     }
 }

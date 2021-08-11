@@ -2,6 +2,7 @@
 using Roca.Bot.Slash.Builder;
 using Roca.Bot.Slash.Readers;
 using Roca.Core;
+using Roca.Core.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -127,6 +128,33 @@ namespace Roca.Bot.Slash.Service
             foreach (var parameter in method.GetParameters())
                 builder.AddParameter(x => BuildParameter(x, parameter, builder, service, services));
 
+            builder.Callback = async (RocaContext context, object[] args, IServiceProvider provider) =>
+            {
+                var instance = CreateInstance(type, provider);
+                instance.Context = context;
+
+                if (method.Invoke(instance, args) is Task task)
+                    await task.ConfigureAwait(false);
+
+                instance.Dispose();
+            };
+        }
+
+        private static RocaBase CreateInstance(TypeInfo type, IServiceProvider services)
+        {
+            var constructor = type.DeclaredConstructors.Single(x => !x.IsStatic);
+            var parameters = constructor.GetParameters();
+            var args = new object[parameters.Length];
+
+            for (int i = 0; i < parameters.Length; i++)
+                args[i] = services.GetService(parameters[i].ParameterType)!;
+
+            object instance = constructor.Invoke(args);
+
+            foreach (var property in type.DeclaredProperties)
+                property.SetValue(instance, services.GetService(property.PropertyType));
+
+            return (RocaBase)instance;
         }
 
         private static void BuildParameter(ParameterBuilder builder, ParameterInfo parameter, CommandBuilder command, SlashService service, IServiceProvider services)

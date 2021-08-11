@@ -1,6 +1,7 @@
 ﻿using Roca.Bot.Slash.Info;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Roca.Bot.Slash.Builder
 {
@@ -11,6 +12,8 @@ namespace Roca.Bot.Slash.Builder
         public List<ParameterBuilder> Parameters = new();
         public string? Name { get; set; }
         public string? Description { get; set; }
+        public Func<RocaContext, object[], IServiceProvider, Task> Callback { get; set; }
+
 
         public CommandBuilder(ModuleBuilder module) => _module = module;
 

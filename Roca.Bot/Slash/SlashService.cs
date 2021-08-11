@@ -209,15 +209,19 @@ namespace Roca.Bot.Slash
             try
             {
                 CommandInfo result;
+                IEnumerable<SocketSlashCommandDataOption> opts;
 
                 if (command.Data.Options.Count == 1 && command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommandGroup)
-                    result = FindCommand(FindModule(command).Groups, command.Data.Options.First());
+                    (result, opts) = FindCommand(FindModule(command).Groups, command.Data.Options.First());
                 else if (command.Data.Options.Count == 1 && command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommand)
-                    result = FindCommand(FindModule(command).Commands, command.Data.Options.First());
+                    (result, opts) = FindCommand(FindModule(command).Commands, command.Data.Options.First());
                 else
+                {
                     result = _modules.Values.Where(x => x.Name == null).SelectMany(x => x.Commands).Single(x => x.Name == command.Data.Name);
-
-                await result.ExecuteAsync(command).ConfigureAwait(false);
+                    opts = command.Data.Options;
+                }
+                
+                await result.ExecuteAsync(command, opts, _services).ConfigureAwait(false);
             }
             catch (InvalidOperationException)
             {
@@ -228,11 +232,11 @@ namespace Roca.Bot.Slash
         private ModuleInfo FindModule(SocketSlashCommand command) =>
             _modules.Values.Single(x => x.Name == command.Data.Name);
 
-        private CommandInfo FindCommand(IEnumerable<ModuleInfo> groups, SocketSlashCommandDataOption command) =>
+        private (CommandInfo, IEnumerable<SocketSlashCommandDataOption>) FindCommand(IEnumerable<ModuleInfo> groups, SocketSlashCommandDataOption command) =>
             FindCommand(groups.Single(x => x.Name == command.Name).Commands, command.Options.First());
 
-        private CommandInfo FindCommand(IEnumerable<CommandInfo> commands, SocketSlashCommandDataOption command) => 
-            commands.Single(x => x.Name == command.Name);
+        private (CommandInfo, IEnumerable<SocketSlashCommandDataOption>) FindCommand(IEnumerable<CommandInfo> commands, SocketSlashCommandDataOption command) => 
+            (commands.Single(x => x.Name == command.Name), command.Options);
 
         public void Dispose() => GC.SuppressFinalize(this);
     }
