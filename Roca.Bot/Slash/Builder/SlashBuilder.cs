@@ -132,6 +132,7 @@ namespace Roca.Bot.Slash.Service
             {
                 var instance = CreateInstance(type, provider);
                 instance.Context = context;
+                instance.Localizer = type.GetLocalizer();
 
                 if (method.Invoke(instance, args) is Task task)
                     await task.ConfigureAwait(false);
