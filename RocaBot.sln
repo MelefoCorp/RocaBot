@@ -10,6 +10,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roca.Bot", "Roca.Bot\Roca.B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roca.Core", "RocaCore\Roca.Core\Roca.Core.csproj", "{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Victoria", "Victoria\src\Victoria.csproj", "{F78D64F6-5195-4F9F-B933-D8365B107525}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6023E6D4-A4AB-4272-BEEB-D5ABF357BF6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F78D64F6-5195-4F9F-B933-D8365B107525}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F78D64F6-5195-4F9F-B933-D8365B107525}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F78D64F6-5195-4F9F-B933-D8365B107525}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F78D64F6-5195-4F9F-B933-D8365B107525}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

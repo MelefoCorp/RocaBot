@@ -11,6 +11,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Victoria;
 
 namespace Roca.Bot
 {
@@ -61,6 +62,13 @@ namespace Roca.Bot
             _services = new ServiceCollection()
                 .AddSingleton(this)
                 .AddSingleton(_client)
+                .AddLavaNode(x =>
+                {
+                    x.Port = ushort.Parse(configuration["LavaLink:Port"]);
+                    x.Hostname = configuration["LavaLink:Address"];
+                    x.Authorization = configuration["LavaLink:Password"];
+                    x.SelfDeaf = false;
+                })
                 .AddSingletonInterface<IService>(Assembly)
                 .BuildServiceProvider();
 

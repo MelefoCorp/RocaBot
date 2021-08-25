@@ -154,6 +154,8 @@ namespace Roca.Bot.Slash.Service
 
             foreach (var property in type.DeclaredProperties)
                 property.SetValue(instance, services.GetService(property.PropertyType));
+            foreach (var property in type.BaseType?.GetTypeInfo()?.DeclaredProperties ?? Array.Empty<PropertyInfo>())
+                property.SetValue(instance, services.GetService(property.PropertyType));
 
             return (RocaBase)instance;
         }

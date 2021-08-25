@@ -14,7 +14,8 @@ namespace Roca.Bot.Slash
         public IDiscordClient Client { get; }
         public IUser User => Command.User;
         public UserAccount UserAccount => User.GetAccount();
-        public MemberAccount? MemberAccount => ((IGuildUser)User)?.GetAccount();
+        public IGuildUser? Member => (IGuildUser)User;
+        public MemberAccount? MemberAccount => Member?.GetAccount();
 
         public ISocketMessageChannel Channel => Command.Channel;
         public IGuild? Guild => (Channel as IGuildChannel)?.Guild;

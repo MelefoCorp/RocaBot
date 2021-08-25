@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RocaCore\Roca.Core\Roca.Core.csproj" />
+    <ProjectReference Include="..\Victoria\src\Victoria.csproj" />
   </ItemGroup>
 
 </Project>

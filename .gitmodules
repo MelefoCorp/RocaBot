@@ -1,3 +1,6 @@
 [submodule "RocaCore"]
 	path = RocaCore
 	url = git@gitlab.com:MelefoCorp/RocaBot/RocaCore.git
+[submodule "Victoria"]
+	path = Victoria
+	url = https://github.com/Yucked/Victoria

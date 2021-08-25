@@ -76,8 +76,6 @@ namespace Roca.Bot.Slash
 
             _client.InteractionCreated += HandleInteractionAsync;
             _enabled = true;
-
-            return;
         }
 
         public Task Disable()
