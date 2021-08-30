@@ -1,5 +1,4 @@
 ﻿using Roca.Bot.Slash.Info;
-using Roca.Bot.Slash.Service;
 using System;
 using System.Collections.Generic;
 

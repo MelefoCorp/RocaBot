@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿using System;
+using System.Threading.Tasks;
+using Discord;
 using Roca.Bot.Slash;
 using Roca.Core.Interfaces;
 using Victoria;
@@ -17,18 +19,22 @@ namespace Roca.Bot.Modules.Audio.Services
         {
             if (_enabled)
                 return;
+            
             await Lava.ConnectAsync().ConfigureAwait(false);
+            _enabled = true;
         }
         public async Task Disable()
         {
             if (!_enabled)
                 return;
+            
             await Lava.DisconnectAsync().ConfigureAwait(false);
+            _enabled = false;
         }
 
         public async Task<(bool IsSuccess, LavaPlayer? Player)> TryJoinAsync(RocaContext context, bool move = false)
         {
-            if (context.Member == null || context.Member.VoiceChannel == null)
+            if (context.Member?.VoiceChannel == null)
                 return (false, null);
 
             if (Lava.TryGetPlayer(context.Guild, out var player))
@@ -41,6 +47,8 @@ namespace Roca.Bot.Modules.Audio.Services
             else
                 player = await Lava.JoinAsync(context.Member.VoiceChannel, context.Channel as ITextChannel).ConfigureAwait(false);
 
+            if (player.VoiceChannel is IStageChannel stage)
+                await stage.BecomeSpeakerAsync().ConfigureAwait(false);
             return (true, player);
         }
 
@@ -48,11 +56,8 @@ namespace Roca.Bot.Modules.Audio.Services
         {
             if (!Lava.TryGetPlayer(context.Guild, out player))
                 return false;
-
-            if (player.VoiceChannel.Id != context.Member!.VoiceChannel.Id)
-                return false;
-
-            return true;
+            
+            return player.VoiceChannel.Id == context.Member!.VoiceChannel.Id;
         }
 
         public void Dispose() => GC.SuppressFinalize(this);

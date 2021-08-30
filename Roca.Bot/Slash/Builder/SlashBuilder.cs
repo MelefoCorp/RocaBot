@@ -1,30 +1,27 @@
-﻿using Roca.Bot.Slash.Attributes;
-using Roca.Bot.Slash.Builder;
-using Roca.Bot.Slash.Readers;
-using Roca.Core;
-using Roca.Core.Interfaces;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Roca.Bot.Slash.Attributes;
+using Roca.Core;
 
-namespace Roca.Bot.Slash.Service
+namespace Roca.Bot.Slash.Builder
 {
     internal static class SlashBuilder
     {
-        private static readonly TypeInfo _moduleType = typeof(RocaBase).GetTypeInfo();
-        private static readonly Type _task = typeof(Task);
-        private static readonly Type _void = typeof(void);
+        private static readonly TypeInfo ModuleType = typeof(RocaBase).GetTypeInfo();
+        private static readonly Type Task = typeof(Task);
+        private static readonly Type Void = typeof(void);
 
-        public static bool IsModuleCandidate(this TypeInfo type)
+        private static bool IsModuleCandidate(this TypeInfo type)
         {
             if (type.GetCustomAttribute<CompilerGeneratedAttribute>() != null)
                 return false;
 
-            if (!type.IsAssignableTo(_moduleType))
+            if (!type.IsAssignableTo(ModuleType))
                 return false;
             if (!type.DeclaredMethods.Any(IsCommandCandidate) && !type.DeclaredNestedTypes.Any(IsGroupCandidate))
                 return false;
@@ -32,15 +29,15 @@ namespace Roca.Bot.Slash.Service
             return type.IsClass && !type.ContainsGenericParameters && !type.IsAbstract;
         }
 
-        public static bool IsGroupCandidate(this TypeInfo type) =>
+        private static bool IsGroupCandidate(this TypeInfo type) =>
             type.IsModuleCandidate() && type.GetCustomAttribute<RocaModuleAttribute>() != null;
 
-        public static bool IsCommandCandidate(this MethodInfo method)
+        private static bool IsCommandCandidate(this MethodInfo method)
         {
             if (method.GetCustomAttribute<CompilerGeneratedAttribute>() != null)
                 return false;
 
-            if (method.ReturnType != _task && method.ReturnType != _void)
+            if (method.ReturnType != Task && method.ReturnType != Void)
                 return false;
             if (method.GetCustomAttribute<RocaCommandAttribute>() == null)
                 return false;
@@ -48,22 +45,8 @@ namespace Roca.Bot.Slash.Service
             return !method.IsStatic && !method.IsAbstract && !method.IsGenericMethod;
         }
 
-        public static IEnumerable<TypeInfo> FindModules(Assembly assembly)
-        {
-            var list = new List<TypeInfo>();
-
-            foreach (var type in assembly.DefinedTypes)
-            {
-                if (!type.IsPublic && !type.IsNestedPublic)
-                    continue;
-                if (!type.IsModuleCandidate())
-                    continue;
-                if (type.DeclaringType == null)
-                    list.Add(type);
-            }
-
-            return list;
-        }
+        public static IEnumerable<TypeInfo> FindModules(Assembly assembly) => 
+            from type in assembly.DefinedTypes where type.IsPublic || type.IsNestedPublic && type.IsModuleCandidate() && type.DeclaringType == null select type;
 
         public static IReadOnlyDictionary<Type, Info.ModuleInfo> BuildModules(IEnumerable<TypeInfo> types, SlashService service, IServiceProvider services)
         {
@@ -73,38 +56,37 @@ namespace Roca.Bot.Slash.Service
             {
                 var builder = new ModuleBuilder(service, null);
 
-                BuildModule(builder, type, service, services);
-                BuildGroups(builder, type.DeclaredNestedTypes, service, services);
+                BuildModule(builder, type, service);
+                BuildGroups(builder, type.DeclaredNestedTypes, service);
 
                 list[type.AsType()] = builder.Build();
             }
             return list;
         }
 
-        public static void BuildGroups(ModuleBuilder builder, IEnumerable<TypeInfo> types, SlashService service, IServiceProvider services)
+        private static void BuildGroups(ModuleBuilder builder, IEnumerable<TypeInfo> types, SlashService service)
         {
             foreach (var type in types.Where(IsGroupCandidate))
                 builder.AddModule(x =>
                 {
-                    BuildModule(x, type, service, services);
-                    BuildGroups(x, type.DeclaredNestedTypes, service, services);
+                    BuildModule(x, type, service);
+                    BuildGroups(x, type.DeclaredNestedTypes, service);
                 });
         }
 
-        private static void BuildModule(ModuleBuilder builder, TypeInfo type, SlashService service, IServiceProvider services)
+        private static void BuildModule(ModuleBuilder builder, TypeInfo type, SlashService service)
         {
             foreach (var attribute in type.GetCustomAttributes())
-                switch (attribute)
+                builder.Name = attribute switch
                 {
-                    case RocaModuleAttribute module:
-                        builder.Name = module.Name.ToLowerInvariant();
-                        break;
-                }
+                    RocaModuleAttribute module => module.Name.ToLowerInvariant(),
+                    _ => builder.Name
+                };
 
             if (string.IsNullOrWhiteSpace(builder.Name))
                 throw new RocaBuilderException("Module must have a name");
 
-            builder.Description = type.GetLocalizer()[$"{type.Name}_desc"];
+            builder.Description = type.GetLocalizer()[CultureInfo.GetCultureInfo("en-US"), $"{type.Name}_desc"];
 
             foreach (var command in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(IsCommandCandidate))
                 builder.AddCommand(x => BuildCommand(x, type, command, service));
@@ -113,22 +95,21 @@ namespace Roca.Bot.Slash.Service
         private static void BuildCommand(CommandBuilder builder, TypeInfo type, MethodInfo method, SlashService service)
         {
             foreach (var attribute in method.GetCustomAttributes())
-                switch (attribute)
+                builder.Name = attribute switch
                 {
-                    case RocaCommandAttribute command:
-                        builder.Name = command.Name.ToLowerInvariant();
-                        break;
-                }
+                    RocaCommandAttribute command => command.Name.ToLowerInvariant(),
+                    _ => builder.Name
+                };
 
             if (string.IsNullOrWhiteSpace(builder.Name))
                 throw new RocaBuilderException("Command must have a name");
 
-            builder.Description = type.GetLocalizer()[$"{builder.Name}_desc"];
+            builder.Description = type.GetLocalizer()[CultureInfo.GetCultureInfo("en-US"), $"{builder.Name}_desc"];
 
             foreach (var parameter in method.GetParameters())
                 builder.AddParameter(x => BuildParameter(x, parameter, builder, service));
 
-            builder.Callback = async (RocaContext context, object[] args, IServiceProvider provider) =>
+            builder.Callback = async (context, args, provider) =>
             {
                 var instance = CreateInstance(type, provider);
                 instance.Context = context;
@@ -154,7 +135,7 @@ namespace Roca.Bot.Slash.Service
 
             foreach (var property in type.DeclaredProperties)
                 property.SetValue(instance, services.GetService(property.PropertyType));
-            foreach (var property in type.BaseType?.GetTypeInfo()?.DeclaredProperties ?? Array.Empty<PropertyInfo>())
+            foreach (var property in type.BaseType?.GetTypeInfo().DeclaredProperties ?? Array.Empty<PropertyInfo>())
                 property.SetValue(instance, services.GetService(property.PropertyType));
 
             return (RocaBase)instance;
@@ -168,7 +149,7 @@ namespace Roca.Bot.Slash.Service
             builder.Type = parameter.ParameterType;
 
             var type = parameter.Member.ReflectedType!;
-            builder.Description = type.GetLocalizer()[$"{command.Name}_{builder.Name}_desc"];
+            builder.Description = type.GetLocalizer()[CultureInfo.GetCultureInfo("en-US"), $"{command.Name}_{builder.Name}_desc"];
 
             if (!service.TypeReaders.TryGetValue(builder.Type, out var reader))
                 throw new ArgumentException("A command doesn't contains a valid argument type");

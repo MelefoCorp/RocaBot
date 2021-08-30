@@ -9,7 +9,7 @@ namespace Roca.Bot.Slash.Info
 {
     public class ParameterInfo
     {
-        private TypeReader _typeReader { get; }
+        private TypeReader TypeReader { get; }
 
         public CommandInfo Command { get; }
         public string Name { get; }
@@ -17,7 +17,7 @@ namespace Roca.Bot.Slash.Info
         public bool IsOptional { get; }
         public object? DefaultValue { get; }
         public Type Type { get; }
-        public ApplicationCommandOptionType OptionType => _typeReader.OptionType;
+        public ApplicationCommandOptionType OptionType => TypeReader.OptionType;
 
 
         internal ParameterInfo(ParameterBuilder builder, CommandInfo command)
@@ -28,10 +28,10 @@ namespace Roca.Bot.Slash.Info
             IsOptional = builder.IsOptional;
             DefaultValue = builder.DefaultValue;
             Type = builder.Type!;
-            _typeReader = builder.TypeReader!;
+            TypeReader = builder.TypeReader!;
         }
 
         public async Task<object> ParseAsync(RocaContext context, SocketSlashCommandDataOption option, IServiceProvider services) => 
-            await _typeReader.ReadAsync(context, option, services).ConfigureAwait(false);
+            await TypeReader.ReadAsync(context, option, services).ConfigureAwait(false);
     }
 }

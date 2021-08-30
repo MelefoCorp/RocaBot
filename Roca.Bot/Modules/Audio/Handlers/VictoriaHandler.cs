@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿using System;
+using System.Threading.Tasks;
+using Discord;
 using Roca.Core.Interfaces;
 using Victoria;
 using Victoria.Enums;
@@ -13,27 +15,37 @@ namespace Roca.Bot.Modules.Audio.Handlers
 
         public VictoriaHandler(LavaNode lava) => _lava = lava;
 
-        public async Task Enable()
+        public Task Enable()
         {
             if (_enabled)
-                return;
-
+                return Task.CompletedTask;
+            
             _lava.OnLog += Log;
             _lava.OnTrackEnded += TrackEnded;
+            _enabled = true;
+
+            return Task.CompletedTask;
         }
 
-        public async Task Disable()
+        public Task Disable()
         {
             if (!_enabled)
-                return;
+                return Task.CompletedTask;
 
             _lava.OnLog -= Log;
+            _enabled = false;
+
+            return Task.CompletedTask;
         }
 
-        private async Task Log(LogMessage arg)
+        private Task Log(LogMessage arg)
         {
-            if (arg.Severity == LogSeverity.Error || arg.Severity == LogSeverity.Critical)
-                throw arg.Exception;
+            if (arg.Severity is LogSeverity.Error or LogSeverity.Critical)
+            {
+
+            }
+            
+            return Task.CompletedTask;
         }
 
         private async Task TrackEnded(TrackEndedEventArgs arg)

@@ -3,16 +3,17 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Roca.Bot.Slash.Info;
 using Roca.Bot.Slash.Readers;
-using Roca.Bot.Slash.Service;
 using Roca.Core;
 using Roca.Core.Interfaces;
 using Roca.Core.Translation;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Roca.Bot.Slash.Builder;
 
 namespace Roca.Bot.Slash
 {
@@ -22,9 +23,9 @@ namespace Roca.Bot.Slash
         private readonly IServiceProvider _services;
         private readonly ConcurrentDictionary<Type, ModuleInfo> _modules = new();
         private bool _enabled;
-        private readonly RocaLocalizer _localizer;
+        private readonly Rocalizer _localizer;
 
-        internal ConcurrentDictionary<Type, TypeReader> TypeReaders = new();
+        internal readonly ConcurrentDictionary<Type, TypeReader> TypeReaders = new();
 
         public SlashService(DiscordShardedClient client, IServiceProvider? services)
         {
@@ -98,8 +99,8 @@ namespace Roca.Bot.Slash
                 var types = SlashBuilder.FindModules(assembly);
                 var modules = SlashBuilder.BuildModules(types, this, _services);
 
-                foreach (var module in modules)
-                    _modules.TryAdd(module.Key, module.Value);
+                foreach (var (key, module) in modules)
+                    _modules.TryAdd(key, module);
             }
 
             List<SlashCommandCreationProperties> commands = new();
@@ -108,13 +109,12 @@ namespace Roca.Bot.Slash
             {
                 if (module.Name == null)
                 {
-                    foreach (var command in module.Commands)
-                        commands.Add(new SlashCommandBuilder
-                        {
-                            Name = command.Name,
-                            Description = command.Description,
-                            Options = AddParameters(command.Parameters)
-                        }.Build());
+                    commands.AddRange(module.Commands.Select(command => new SlashCommandBuilder
+                    {
+                        Name = command.Name,
+                        Description = command.Description,
+                        Options = AddParameters(command.Parameters)
+                    }.Build()));
                 }
                 else
                     commands.Add(new SlashCommandBuilder
@@ -125,30 +125,26 @@ namespace Roca.Bot.Slash
                     }.Build());
             }
 
-           await _client.Rest.BulkOverwriteGlobalCommands(commands.ToArray()).ConfigureAwait(false);
+            await _client.Rest.BulkOverwriteGlobalCommands(commands.ToArray()).ConfigureAwait(false);
         }
 
         private static List<SlashCommandOptionBuilder> AddModule(ModuleInfo module)
         {
-            List<SlashCommandOptionBuilder> subs = new();
-
-            foreach (var command in module.Commands)
-                subs.Add(new()
-                { 
-                    Name = command.Name,
-                    Description = command.Description,
-                    Type = ApplicationCommandOptionType.SubCommand,
-                    Options = AddParameters(command.Parameters)
-                });
-
-            foreach (var group in module.Groups)
-                subs.Add(new()
-                {
-                    Name = group.Name!,
-                    Description = group.Description,
-                    Type = ApplicationCommandOptionType.SubCommandGroup,
-                    Options = AddCommands(group.Commands)
-                });
+            List<SlashCommandOptionBuilder> subs = module.Commands.Select(command => new SlashCommandOptionBuilder()
+            {
+                Name = command.Name,
+                Description = command.Description,
+                Type = ApplicationCommandOptionType.SubCommand,
+                Options = AddParameters(command.Parameters)
+            }).ToList();
+            
+            subs.AddRange(module.Groups.Select(group => new SlashCommandOptionBuilder()
+            {
+                Name = group.Name!, 
+                Description = group.Description, 
+                Type = ApplicationCommandOptionType.SubCommandGroup,
+                Options = AddCommands(group.Commands)
+            }));
 
             return subs;
         }
@@ -209,21 +205,25 @@ namespace Roca.Bot.Slash
                 CommandInfo result;
                 IEnumerable<SocketSlashCommandDataOption> opts;
 
-                if (command.Data.Options.Count == 1 && command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommandGroup)
-                    (result, opts) = FindCommand(FindModule(command).Groups, command.Data.Options.First());
-                else if (command.Data.Options.Count == 1 && command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommand)
-                    (result, opts) = FindCommand(FindModule(command).Commands, command.Data.Options.First());
-                else
+                switch (command.Data.Options.Count)
                 {
-                    result = _modules.Values.Where(x => x.Name == null).SelectMany(x => x.Commands).Single(x => x.Name == command.Data.Name);
-                    opts = command.Data.Options;
+                    case 1 when command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommandGroup:
+                        (result, opts) = FindCommand(FindModule(command).Groups, command.Data.Options.First());
+                        break;
+                    case 1 when command.Data.Options.First().Type == ApplicationCommandOptionType.SubCommand:
+                        (result, opts) = FindCommand(FindModule(command).Commands, command.Data.Options.First());
+                        break;
+                    default:
+                        result = _modules.Values.Where(x => x.Name == null).SelectMany(x => x.Commands).Single(x => x.Name == command.Data.Name);
+                        opts = command.Data.Options;
+                        break;
                 }
                 
                 await result.ExecuteAsync(command, opts, _client, _services).ConfigureAwait(false);
             }
             catch (InvalidOperationException)
             {
-                await command.RespondAsync(_localizer["cmd_not_found"], ephemeral: true).ConfigureAwait(false);
+                await command.RespondAsync(_localizer[CultureInfo.GetCultureInfo("en-US"), "cmd_not_found"], ephemeral: true).ConfigureAwait(false);
             }
         }
 

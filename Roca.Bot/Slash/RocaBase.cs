@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿using System;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Rest;
 using Roca.Core.Interfaces;
 using Roca.Core.Translation;
@@ -12,7 +14,7 @@ namespace Roca.Bot.Slash
 
     public class RocaBase : IDisposable
     {
-        public RocaLocalizer Localizer { get; internal set; }
+        public Rocalizer Localizer { get; internal set; }
         public RocaContext Context { get; internal set; }
 
         public async Task<RestFollowupMessage> ReplyAsync(string? text = null, Embed[]? embeds = null, bool isTTS = false, bool ephemeral = false, AllowedMentions? allowedMentions = null, RequestOptions? options = null, MessageComponent? component = null, Embed? embed = null)

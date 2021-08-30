@@ -2,13 +2,9 @@
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Roca.Bot.Slash;
-using Roca.Bot.Slash.Builder;
-using Roca.Bot.Slash.Service;
 using Roca.Core.Extensions;
 using Roca.Core.Interfaces;
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Victoria;
@@ -20,9 +16,9 @@ namespace Roca.Bot
         private readonly DiscordShardedClient _client;
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
-        private int _shards = 0;
-
-        internal Assembly Assembly;
+        private int _shards;
+        
+        internal readonly Assembly Assembly;
 
         public event Func<DiscordShardedClient, Task> Ready;
 

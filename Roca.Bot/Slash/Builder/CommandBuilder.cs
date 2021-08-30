@@ -9,7 +9,7 @@ namespace Roca.Bot.Slash.Builder
     {
         private readonly ModuleBuilder _module;
 
-        public List<ParameterBuilder> Parameters = new();
+        public readonly List<ParameterBuilder> Parameters = new();
         public string? Name { get; set; }
         public string? Description { get; set; }
         public Func<RocaContext, object[], IServiceProvider, Task>? Callback { get; set; }

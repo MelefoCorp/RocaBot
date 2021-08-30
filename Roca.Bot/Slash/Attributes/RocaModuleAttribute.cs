@@ -8,6 +8,6 @@ namespace Roca.Bot.Slash.Attributes
     {
         public string Name { get; }
 
-        public RocaModuleAttribute([CallerMemberName] string name = "") : base() => Name = name;
+        public RocaModuleAttribute([CallerMemberName] string name = "") => Name = name;
     }
 }
