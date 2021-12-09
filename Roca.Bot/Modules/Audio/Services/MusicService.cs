@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using Roca.Bot.Slash;
 using Roca.Core.Interfaces;
 using Victoria;
 

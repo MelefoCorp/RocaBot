@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,18 +15,16 @@ namespace Roca.Bot
     public class RocaBot
     {
         private readonly DiscordShardedClient _client;
+        private readonly InteractionService _interaction;
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
+        private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
         private int _shards;
         
-        internal readonly Assembly Assembly;
-
         public event Func<DiscordShardedClient, Task> Ready;
 
         public RocaBot(IConfiguration configuration)
         {
-            Assembly = GetType().Assembly;
-
             _configuration = configuration;
 
             if (!int.TryParse(_configuration["RocaBot:Shards"], out int shards))
@@ -33,7 +32,7 @@ namespace Roca.Bot
 
             _client = new DiscordShardedClient(new DiscordSocketConfig
             {
-                AlwaysAcknowledgeInteractions = false,
+                //AlwaysAcknowledgeInteractions = false,
                 GatewayIntents = GatewayIntents.All,
                 LargeThreshold = 250,
                 AlwaysDownloadUsers = true,
@@ -48,8 +47,15 @@ namespace Roca.Bot
 #endif
             });
 
+            _interaction = new InteractionService(_client);
+
             //TODO Add a custom Logger
             _client.Log += l =>
+            {
+                Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message}");
+                return Task.CompletedTask;
+            };
+            _interaction.Log += l =>
             {
                 Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message}");
                 return Task.CompletedTask;
@@ -58,6 +64,7 @@ namespace Roca.Bot
             _services = new ServiceCollection()
                 .AddSingleton(this)
                 .AddSingleton(_client)
+                .AddSingleton(_interaction)
                 .AddLavaNode(x =>
                 {
                     x.Port = ushort.Parse(configuration["LavaLink:Port"]);
@@ -65,11 +72,11 @@ namespace Roca.Bot
                     x.Authorization = configuration["LavaLink:Password"];
                     x.SelfDeaf = false;
                 })
-                .AddSingletonInterface<IService>(Assembly)
+                .AddSingletonInterface<IService>(_assembly)
                 .BuildServiceProvider();
 
-            _client.ShardReady += ShardReady;
             Ready += EnableServices;
+            _client.ShardReady += ShardReady;
         }
 
         private async Task ShardReady(DiscordSocketClient _)
@@ -85,6 +92,11 @@ namespace Roca.Bot
         {
             foreach (var service in _services.GetServices<IService>())
                 await service.Enable().ConfigureAwait(false);
+#if DEBUG
+            await _services.GetRequiredService<InteractionService>().RegisterCommandsToGuildAsync(ulong.Parse(_configuration["Discord:Owner"]), true);
+#else
+            await _services.GetRequiredService<InteractionService>().RegisterCommandsGloballyAsync(true);
+#endif
         }
 
         public async Task Start()

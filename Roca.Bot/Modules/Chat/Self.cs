@@ -1,13 +1,12 @@
-﻿using Roca.Bot.Slash;
-using Roca.Bot.Slash.Attributes;
+﻿using Discord.Interactions;
 using System.Threading.Tasks;
 
 namespace Roca.Bot.Modules.Chat
 {
-    [RocaModule]
+    [Group("self", "A list of commands used to control RocaBot")]
     public class Self : RocaBase
     {
-        [RocaCommand]
-        public async Task Ping() => await ReplyAsync(Localizer[Context.GuildAccount!.Language, "pong"]);
+        [SlashCommand("ping", "ping")]
+        public async Task Ping() => await RespondAsync(Localizer[Context.GuildAccount!.Language, "pong"]);
     }
 }

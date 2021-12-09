@@ -1,42 +1,41 @@
 ﻿using System;
 using System.Linq;
 using Roca.Bot.Modules.Audio.Services;
-using Roca.Bot.Slash;
-using Roca.Bot.Slash.Attributes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Victoria;
-using Victoria.Enums;
 using Victoria.Responses.Search;
+using Discord.Interactions;
+using Victoria.Enums;
 
 namespace Roca.Bot.Modules.Audio
 {
-    [RocaModule]
+    [Group("music", "A list of music commands")]
     public class Music : RocaBase<MusicService>
     {
         private static readonly Regex Ytb = new(@"^(?:https?:)?(?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch|v|embed)(?:\.php)?(?:\?.*v=|\/))([a-zA-Z0-9_-]{7,15})(?:[\?&][a-zA-Z0-9_-]+=[a-zA-Z0-9_-]+)*(?:[&\/\#].*)?$");
         private static readonly Regex List = new(@"^(?:https?:)?(?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:playlist|list|embed)(?:\.php)?(?:\?.*list=|\/))([a-zA-Z0-9\-_]+)$");
 
-        [RocaCommand]
+        [SlashCommand("play", "bonjour")]
         public async Task Play(string search)
         {
             if (!Service.Lava.IsConnected)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             var result = await Service.Lava.SearchAsync((Ytb.IsMatch(search) || List.IsMatch(search)) ? SearchType.Direct : SearchType.YouTube, search);
             if (result.Status is SearchStatus.NoMatches or SearchStatus.LoadFailed)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "not_found"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "not_found"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             var joinable = await Service.TryJoinAsync(Context).ConfigureAwait(false);
             if (!joinable.IsSuccess)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "not_joinable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "not_joinable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
@@ -48,21 +47,21 @@ namespace Roca.Bot.Modules.Audio
             if (joinable.Player.PlayerState != PlayerState.Playing && joinable.Player.Queue.TryDequeue(out var play))
                 await joinable.Player.PlayAsync(play).ConfigureAwait(false);
 
-            await ReplyAsync(Localizer[Context.GuildAccount!.Language, "added_queue"]).ConfigureAwait(false);
+            await RespondAsync(Localizer[Context.GuildAccount!.Language, "added_queue"]).ConfigureAwait(false);
         }
 
-        [RocaCommand]
+        [SlashCommand("pause", "bonjour")]
         public async Task Pause()
         {
             if (!Service.Lava.IsConnected)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (!Service.TryGetPlayer(Context, out var player))
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
@@ -70,27 +69,27 @@ namespace Roca.Bot.Modules.Audio
             {
                 case PlayerState.Playing:
                     await player.PauseAsync().ConfigureAwait(false);
-                    await ReplyAsync(Localizer[Context.GuildAccount!.Language, "paused"]).ConfigureAwait(false);
+                    await RespondAsync(Localizer[Context.GuildAccount!.Language, "paused"]).ConfigureAwait(false);
                     break;
                 case PlayerState.Paused:
                     await player.ResumeAsync().ConfigureAwait(false);
-                    await ReplyAsync(Localizer[Context.GuildAccount!.Language, "resumed"]).ConfigureAwait(false);
+                    await RespondAsync(Localizer[Context.GuildAccount!.Language, "resumed"]).ConfigureAwait(false);
                     break;
             }
         }
 
-        [RocaCommand]
+        [SlashCommand("skip", "bonjour")]
         public async Task Skip()
         {
             if (!Service.Lava.IsConnected)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (!Service.TryGetPlayer(Context, out var player) || player.PlayerState != PlayerState.Playing)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
@@ -101,52 +100,52 @@ namespace Roca.Bot.Modules.Audio
                 await player.StopAsync().ConfigureAwait(false);
                 await Service.Lava.LeaveAsync(Context.Member!.VoiceChannel).ConfigureAwait(false);
             }
-            await ReplyAsync(Localizer[Context.GuildAccount!.Language, "skipped"]).ConfigureAwait(false);
+            await RespondAsync(Localizer[Context.GuildAccount!.Language, "skipped"]).ConfigureAwait(false);
         }
 
-        [RocaCommand]
+        [SlashCommand("volume", "bonjour")]
         public async Task Volume(long volume)
         {
             if (!Service.Lava.IsConnected)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (volume is < 0 or > 100)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "between_0_100"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "between_0_100"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (!Service.TryGetPlayer(Context, out var player))
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             await player.UpdateVolumeAsync((ushort)volume).ConfigureAwait(false);
-            await ReplyAsync(Localizer[Context.GuildAccount!.Language, "volume_updated"]).ConfigureAwait(false);
+            await RespondAsync(Localizer[Context.GuildAccount!.Language, "volume_updated"]).ConfigureAwait(false);
         }
 
-        [RocaCommand]
+        [SlashCommand("lyrics", "bonjour")]
         public async Task Lyrics()
         {
             if (!Service.Lava.IsConnected)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (!Service.TryGetPlayer(Context, out var player))
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (player.PlayerState != PlayerState.Playing)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_track"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_track"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
@@ -155,25 +154,25 @@ namespace Roca.Bot.Modules.Audio
                 lyrics = await player.Track.FetchLyricsFromOvhAsync().ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(lyrics))
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_lyrics"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_lyrics"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
-            await ReplyAsync(lyrics).ConfigureAwait(false);
+            await RespondAsync(lyrics).ConfigureAwait(false);
         }
 
-        [RocaCommand]
+        [SlashCommand("queue", "bonjour")]
         public async Task Queue()
         {
             if (!Service.Lava.IsConnected)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (!Service.TryGetPlayer(Context, out var player))
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
@@ -182,33 +181,33 @@ namespace Roca.Bot.Modules.Audio
 
             if (string.IsNullOrWhiteSpace(final))
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "empty_queue"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "empty_queue"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             while (final.Length > 2000)
                 final = final[..final.LastIndexOf('\n')];
-            await ReplyAsync(final).ConfigureAwait(false);
+            await RespondAsync(final).ConfigureAwait(false);
         }
 
-        [RocaCommand]
+        [SlashCommand("track", "bonjour")]
         public async Task Track()
         {
             if (!Service.Lava.IsConnected)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "unavailable"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (!Service.TryGetPlayer(Context, out var player))
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_player"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
             if (player.PlayerState != PlayerState.Playing)
             {
-                await ReplyAsync(Localizer[Context.GuildAccount!.Language, "no_track"], ephemeral: true).ConfigureAwait(false);
+                await RespondAsync(Localizer[Context.GuildAccount!.Language, "no_track"], ephemeral: true).ConfigureAwait(false);
                 return;
             }
 
@@ -219,7 +218,7 @@ namespace Roca.Bot.Modules.Audio
 
             string final = $"{player.Track.Title}\n{player.Track.Author}\n[Link]({player.Track.Url})\n{player.Track.Position:hh\\:mm\\:ss}/{player.Track.Duration:hh\\:mm\\:ss} {Convert.ToInt32(percent * 100)}%\n⏯️ 🔁 ⏮️ {new string(position)} ⏭️ ⏹️ 🔀";
 
-            await ReplyAsync(final).ConfigureAwait(false);
+            await RespondAsync(final).ConfigureAwait(false);
         }
     }
 }

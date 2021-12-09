@@ -7,14 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Labs" Version="3.0.2-pre" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+    <PackageReference Include="Discord.Net.Labs" Version="3.4.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Victoria" Version="5.2.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RocaCore\Roca.Core\Roca.Core.csproj" />
-    <ProjectReference Include="..\Victoria\src\Victoria.csproj" />
   </ItemGroup>
+
+    <PropertyGroup>
+	    <RestoreAdditionalProjectSources>https://www.myget.org/F/yucked/api/v3/index.json</RestoreAdditionalProjectSources>
+    </PropertyGroup>
 
 </Project>
