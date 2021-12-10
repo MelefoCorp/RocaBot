@@ -1,4 +1,5 @@
 ﻿using Discord.Interactions;
+using Roca.Bot.Commands;
 using System.Threading.Tasks;
 
 namespace Roca.Bot.Modules.Chat

@@ -7,6 +7,7 @@ using Victoria;
 using Victoria.Responses.Search;
 using Discord.Interactions;
 using Victoria.Enums;
+using Roca.Bot.Commands;
 
 namespace Roca.Bot.Modules.Audio
 {

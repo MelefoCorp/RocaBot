@@ -47,10 +47,20 @@ namespace Roca.Bot
 #endif
             });
 
-            _interaction = new InteractionService(_client);
+            _interaction = new InteractionService(_client, new InteractionServiceConfig()
+            {
+                DefaultRunMode = RunMode.Async,
+                UseCompiledLambda = true,
+                DeleteUnknownSlashCommandAck = true,
+#if DEBUG
+                LogLevel = LogSeverity.Debug
+#else
+                LogLevel = LogSeverity.Warning
+#endif            
+            });
 
-            //TODO Add a custom Logger
-            _client.Log += l =>
+                //TODO Add a custom Logger
+                _client.Log += l =>
             {
                 Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message}");
                 return Task.CompletedTask;
