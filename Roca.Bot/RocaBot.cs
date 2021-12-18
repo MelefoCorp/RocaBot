@@ -47,8 +47,9 @@ namespace Roca.Bot
 #endif
             });
 
-            _interaction = new InteractionService(_client, new InteractionServiceConfig()
+            _interaction = new InteractionService(_client, new InteractionServiceConfig
             {
+                InteractionCustomIdDelimiters = new[] {' '},
                 DefaultRunMode = RunMode.Async,
                 UseCompiledLambda = true,
                 DeleteUnknownSlashCommandAck = true,
@@ -67,8 +68,8 @@ namespace Roca.Bot
             };
             _interaction.Log += l =>
             {
-                Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message}");
-                return Task.CompletedTask;
+                Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message ?? l.Exception.Message}");
+                return Task.CompletedTask; 
             };
 
             _services = new ServiceCollection()

@@ -14,6 +14,7 @@ namespace Roca.Bot.Commands
         public RocaBase() : base() 
             => Localizer = GetType().GetLocalizer();
 
+        public InteractionService Interaction { get; set; }
         public Rocalizer Localizer { get; }
     }
 }

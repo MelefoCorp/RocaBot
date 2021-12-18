@@ -1,16 +1,23 @@
-﻿using Discord;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Roca.Bot.Attributes;
 using Roca.Bot.Commands;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Roca.Bot.Modules.Moderation
 {
+    [Group("mod", "Moderation commands")]
+
     public class Info : RocaBase
     {
         private readonly Color _color = new(245, 150, 49);
 
+        [RequireRole(Role.Mod)]
         [UserCommand("Whois")]
         public async Task Whois(SocketGuildUser user)
         {
@@ -31,6 +38,7 @@ namespace Roca.Bot.Modules.Moderation
                               $"**Joined**: {(user.JoinedAt.HasValue ? TimestampTag.FromDateTime(user.JoinedAt.Value.UtcDateTime) : "")}\n" +
                               $"**Status**: {user.Status}\n" +
                               $"**Playing**: {string.Join('/', user.Activities.Select(x => $"`{x.Name}`{x.Details}"))}\n" +
+                              $"**Mutes**: {0}\n" +
                               $"**Warns**: {0}\n" +
                               $"**Tempbans**: {0}\n"
             };

@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Roca.Core;
 using Roca.Core.Interfaces;
 using System;
 using System.Reflection;
@@ -58,13 +59,23 @@ namespace Roca.Bot.Commands
             try
             {
                 var ctx = new RocaContext(_client, arg);
+
+#if DEBUG
+                await ctx.GuildAccount.Save();
+                await ctx.UserAccount.Save();
+                await ctx.MemberAccount?.Save();
+#endif
                 await _commands.ExecuteCommandAsync(ctx, _services);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
                 if (arg.Type == InteractionType.ApplicationCommand)
-                    await arg.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
+                {
+                    var msg = await arg.GetOriginalResponseAsync();
+                    if (msg != null)
+                        await msg.DeleteAsync();
+                }
             }
         }
 
@@ -75,15 +86,10 @@ namespace Roca.Bot.Commands
                 switch (arg3.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
-                        break;
                     case InteractionCommandError.UnknownCommand:
-                        break;
                     case InteractionCommandError.BadArgs:
-                        break;
                     case InteractionCommandError.Exception:
-                        break;
                     case InteractionCommandError.Unsuccessful:
-                        break;
                     default:
                         break;
                 }
@@ -99,15 +105,10 @@ namespace Roca.Bot.Commands
                 switch (arg3.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
-                        break;
                     case InteractionCommandError.UnknownCommand:
-                        break;
                     case InteractionCommandError.BadArgs:
-                        break;
                     case InteractionCommandError.Exception:
-                        break;
                     case InteractionCommandError.Unsuccessful:
-                        break;
                     default:
                         break;
                 }
@@ -123,15 +124,10 @@ namespace Roca.Bot.Commands
                 switch (arg3.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
-                        break;
                     case InteractionCommandError.UnknownCommand:
-                        break;
                     case InteractionCommandError.BadArgs:
-                        break;
                     case InteractionCommandError.Exception:
-                        break;
                     case InteractionCommandError.Unsuccessful:
-                        break;
                     default:
                         break;
                 }
