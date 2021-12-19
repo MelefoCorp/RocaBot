@@ -63,7 +63,8 @@ namespace Roca.Bot.Commands
 #if DEBUG
                 await ctx.GuildAccount.Save();
                 await ctx.UserAccount.Save();
-                await ctx.MemberAccount?.Save();
+                if (ctx.MemberAccount != null)
+                    await ctx.MemberAccount.Save();
 #endif
                 await _commands.ExecuteCommandAsync(ctx, _services);
             }
@@ -79,58 +80,58 @@ namespace Roca.Bot.Commands
             }
         }
 
-        private Task ComponentCommandExecuted(ComponentCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+        private Task ComponentCommandExecuted(ComponentCommandInfo arg1, IInteractionContext arg2, IResult arg3)
         {
-            if (!arg3.IsSuccess)
+            if (arg3.IsSuccess)
+                return Task.CompletedTask;
+
+            switch (arg3.Error)
             {
-                switch (arg3.Error)
-                {
-                    case InteractionCommandError.UnmetPrecondition:
-                    case InteractionCommandError.UnknownCommand:
-                    case InteractionCommandError.BadArgs:
-                    case InteractionCommandError.Exception:
-                    case InteractionCommandError.Unsuccessful:
-                    default:
-                        break;
-                }
+                case InteractionCommandError.UnmetPrecondition:
+                case InteractionCommandError.UnknownCommand:
+                case InteractionCommandError.BadArgs:
+                case InteractionCommandError.Exception:
+                case InteractionCommandError.Unsuccessful:
+                default:
+                    break;
             }
 
             return Task.CompletedTask;
         }
 
-        private Task ContextCommandExecuted(ContextCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+        private Task ContextCommandExecuted(ContextCommandInfo arg1, IInteractionContext arg2, IResult arg3)
         {
-            if (!arg3.IsSuccess)
+            if (arg3.IsSuccess)
+                return Task.CompletedTask;
+
+            switch (arg3.Error)
             {
-                switch (arg3.Error)
-                {
-                    case InteractionCommandError.UnmetPrecondition:
-                    case InteractionCommandError.UnknownCommand:
-                    case InteractionCommandError.BadArgs:
-                    case InteractionCommandError.Exception:
-                    case InteractionCommandError.Unsuccessful:
-                    default:
-                        break;
-                }
+                case InteractionCommandError.UnmetPrecondition:
+                case InteractionCommandError.UnknownCommand:
+                case InteractionCommandError.BadArgs:
+                case InteractionCommandError.Exception:
+                case InteractionCommandError.Unsuccessful:
+                default:
+                    break;
             }
 
             return Task.CompletedTask;
         }
 
-        private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+        private Task SlashCommandExecuted(SlashCommandInfo arg1, IInteractionContext arg2, IResult arg3)
         {
-            if (!arg3.IsSuccess)
+            if (arg3.IsSuccess)
+                return Task.CompletedTask;
+
+            switch (arg3.Error)
             {
-                switch (arg3.Error)
-                {
-                    case InteractionCommandError.UnmetPrecondition:
-                    case InteractionCommandError.UnknownCommand:
-                    case InteractionCommandError.BadArgs:
-                    case InteractionCommandError.Exception:
-                    case InteractionCommandError.Unsuccessful:
-                    default:
-                        break;
-                }
+                case InteractionCommandError.UnmetPrecondition:
+                case InteractionCommandError.UnknownCommand:
+                case InteractionCommandError.BadArgs:
+                case InteractionCommandError.Exception:
+                case InteractionCommandError.Unsuccessful:
+                default:
+                    break;
             }
 
             return Task.CompletedTask;

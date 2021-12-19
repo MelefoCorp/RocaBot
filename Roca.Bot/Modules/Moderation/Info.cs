@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
@@ -21,8 +18,6 @@ namespace Roca.Bot.Modules.Moderation
         [UserCommand("Whois")]
         public async Task Whois(SocketGuildUser user)
         {
-            if (user == null)
-                return;
             var embed = new EmbedBuilder
             {
                 Author = new EmbedAuthorBuilder

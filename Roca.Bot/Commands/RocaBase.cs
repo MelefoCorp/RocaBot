@@ -11,7 +11,7 @@ namespace Roca.Bot.Commands
 
     public class RocaBase : InteractionModuleBase<RocaContext>
     {
-        public RocaBase() : base() 
+        public RocaBase()
             => Localizer = GetType().GetLocalizer();
 
         public InteractionService Interaction { get; set; }

@@ -8,6 +8,7 @@ using Roca.Core.Interfaces;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using FluentScheduler;
 using Victoria;
 
 namespace Roca.Bot
@@ -15,7 +16,6 @@ namespace Roca.Bot
     public class RocaBot
     {
         private readonly DiscordShardedClient _client;
-        private readonly InteractionService _interaction;
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
         private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
@@ -28,7 +28,8 @@ namespace Roca.Bot
             _configuration = configuration;
 
             if (!int.TryParse(_configuration["RocaBot:Shards"], out int shards))
-                throw new ArgumentException("You must put a valid number in \"Shards\" variable of \"RocaBot\" section inside your configuration");
+                throw new ArgumentException(
+                    "You must put a valid number in \"Shards\" variable of \"RocaBot\" section inside your configuration");
 
             _client = new DiscordShardedClient(new DiscordSocketConfig
             {
@@ -47,7 +48,7 @@ namespace Roca.Bot
 #endif
             });
 
-            _interaction = new InteractionService(_client, new InteractionServiceConfig
+            var interaction = new InteractionService(_client, new InteractionServiceConfig
             {
                 InteractionCustomIdDelimiters = new[] {' '},
                 DefaultRunMode = RunMode.Async,
@@ -57,25 +58,26 @@ namespace Roca.Bot
                 LogLevel = LogSeverity.Debug
 #else
                 LogLevel = LogSeverity.Warning
-#endif            
+#endif
             });
 
-                //TODO Add a custom Logger
-                _client.Log += l =>
+            //TODO Add a custom Logger
+            _client.Log += l =>
             {
                 Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message}");
                 return Task.CompletedTask;
             };
-            _interaction.Log += l =>
+            interaction.Log += l =>
             {
-                Console.WriteLine($"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message ?? l.Exception.Message}");
-                return Task.CompletedTask; 
+                Console.WriteLine(
+                    $"[{DateTime.UtcNow}] [{l.Source}] [{l.Severity}] {l.Message ?? l.Exception.Message}");
+                return Task.CompletedTask;
             };
 
             _services = new ServiceCollection()
                 .AddSingleton(this)
                 .AddSingleton(_client)
-                .AddSingleton(_interaction)
+                .AddSingleton(interaction)
                 .AddLavaNode(x =>
                 {
                     x.Port = ushort.Parse(configuration["LavaLink:Port"]);
@@ -104,7 +106,7 @@ namespace Roca.Bot
             foreach (var service in _services.GetServices<IService>())
                 await service.Enable().ConfigureAwait(false);
 #if DEBUG
-            await _services.GetRequiredService<InteractionService>().RegisterCommandsToGuildAsync(ulong.Parse(_configuration["Discord:Owner"]), true);
+            await _services.GetRequiredService<InteractionService>().RegisterCommandsToGuildAsync(ulong.Parse(_configuration["Discord:Owner"]));
 #else
             await _services.GetRequiredService<InteractionService>().RegisterCommandsGloballyAsync(true);
 #endif
@@ -114,12 +116,14 @@ namespace Roca.Bot
         {
             await _client.LoginAsync(TokenType.Bot, _configuration["RocaBot:Token"]).ConfigureAwait(false);
             await _client.StartAsync().ConfigureAwait(false);
+            JobManager.Start();
         }
 
         public async Task Stop()
         {
             _shards = 0;
 
+            JobManager.Stop();
             foreach (var service in _services.GetServices<IService>())
                 await service.Disable().ConfigureAwait(false);
 

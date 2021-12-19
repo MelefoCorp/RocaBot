@@ -1,9 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Roca.Bot.Commands;
-using Roca.Core;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Roca.Bot.Attributes
@@ -25,7 +23,7 @@ namespace Roca.Bot.Attributes
         {
             if (!ctx.GuildAccount.Moderation.Helper.Role.HasValue)
                 return PreconditionResult.FromError("");
-           var role = ctx.Guild.GetRole(ctx.GuildAccount.Moderation.Helper.Role.Value);
+            var role = ctx.Guild.GetRole(ctx.GuildAccount.Moderation.Helper.Role.Value);
             if (role == null)
                 return PreconditionResult.FromError("");
             
